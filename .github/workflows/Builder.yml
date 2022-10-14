@@ -101,11 +101,12 @@ jobs:
           
     - name: Repo Sync
       run: |
+        cd workspace
         repo sync -j$(nproc --all) --force-sync
-      working-directory: workspace
       
     - name: Clone device tree
       run: |
+        cd workspace
         git clone ${{ github.event.inputs.DEVICE_TREE }} -b ${{ github.event.inputs.DEVICE_TREE_BRANCH }} ./${{ github.event.inputs.DEVICE_PATH }}
 
     - name: Check Build Tree
