@@ -130,11 +130,13 @@ jobs:
     - name: Check Build Branch
       if: ${{ github.event.inputs.MANIFEST_BRANCH == 'twrp-12.1' }}
       run: |
+        cd workspace
         source build/envsetup.sh
         repopick 5405 5540
 
     - name: Building Custom Recovery
       run: |
+        cd workspace
         source build/envsetup.sh
         export ALLOW_MISSING_DEPENDENCIES=true
         lunch ${{ github.event.inputs.MAKEFILE_NAME }}-eng && make clean && make ${{ github.event.inputs.BUILD_TARGET }}image -j$(nproc --all)
