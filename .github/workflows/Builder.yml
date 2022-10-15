@@ -49,6 +49,11 @@ on:
         description: 'Specify your Build Target'
         required: true
         default: 'recovery'
+        type: choice
+        options:
+        - boot
+        - recovery
+        - vendor_boot
 
 jobs:
   build:
