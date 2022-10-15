@@ -24,3 +24,5 @@
 - https://github.com/that1
 - https://github.com/TeamWin
 - https://github.com/minimal-manifest-twrp
+- https://github.com/azwhikaru
+- And to all Contributors in every repositories and scripts I used.
