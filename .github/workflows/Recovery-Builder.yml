@@ -35,11 +35,11 @@ on:
       DEVICE_TREE:
         description: 'Custom Recovery Tree'
         required: true
-        default: 'https://github.com/carlodeeCrypton/custom_recovery_tree_cannong'
+        default: 'https://github.com/cd-Spidey/custom_recovery_tree_xiaomi_cannong'
       DEVICE_TREE_BRANCH:
         description: 'Custom Recovery Tree Branch'
         required: true
-        default: 'cannong-12.0'
+        default: 'android-12.1'
       DEVICE_PATH:
         description: 'Specify your device path.'
         required: true
