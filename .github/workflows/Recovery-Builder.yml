@@ -79,9 +79,10 @@ jobs:
 
     - name: Prepare the environment
       run: |
+        sudo dpkg --add-architecture i386
         sudo apt update
         sudo apt -y upgrade
-        sudo apt -y install gperf gcc-multilib gcc-10-multilib g++-multilib g++-10-multilib libc6-dev lib32ncurses5-dev x11proto-core-dev libx11-dev tree lib32z-dev libgl1-mesa-dev libxml2-utils xsltproc bc ccache lib32readline-dev lib32z1-dev liblz4-tool libncurses5-dev libsdl1.2-dev libwxgtk3.0-gtk3-dev libxml2 lzop pngcrush schedtool squashfs-tools imagemagick libbz2-dev lzma ncftp qemu-user-static libstdc++-10-dev python
+        sudo apt -y install checkpolicy gperf gcc-multilib gcc-10-multilib g++-multilib g++-10-multilib lib32z1 libc6-dev libncurses5 lib32ncurses5-dev x11proto-core-dev libx11-dev tree lib32z-dev libgl1-mesa-dev libxml2-utils xsltproc bc ccache lib32readline-dev lib32z1-dev liblz4-tool libncurses5-dev libsdl1.2-dev libwxgtk3.0-gtk3-dev libxml2 lzop pngcrush schedtool squashfs-tools imagemagick libbz2-dev lzma ncftp qemu-user-static libstdc++-10-dev python
 
     - name: Install OpenJDK
       uses: actions/setup-java@v3.5.1
@@ -100,19 +101,21 @@ jobs:
       run: |
         mkdir workspace
         cd workspace
+        echo "workdir=$(pwd)" >> $GITHUB_OUTPUT
         git config --global user.name "Carlo Dandan"
         git config --global user.email "jasminecarlo01@gmail.com"
         repo init --depth=1 -u ${{ github.event.inputs.MANIFEST_URL }} -b ${{ github.event.inputs.MANIFEST_BRANCH }}
-          
+      id: pwd
+        
     - name: Repo Sync
       run: |
-        cd workspace
         repo sync -j$(nproc --all) --force-sync
+      working-directory: workspace
       
     - name: Clone device tree
       run: |
-        cd workspace
         git clone ${{ github.event.inputs.DEVICE_TREE }} -b ${{ github.event.inputs.DEVICE_TREE_BRANCH }} ./${{ github.event.inputs.DEVICE_PATH }}
+      working-directory: ${{ steps.pwd.outputs.workdir }}
 
     - name: Check Build Tree
       uses: haya14busa/action-cond@v1
@@ -126,6 +129,7 @@ jobs:
       run: |
         bash ${GITHUB_WORKSPACE}/.github/workflows/dependencies.sh ${{ github.event.inputs.DEVICE_PATH }}/${{ steps.buildtree.outputs.value }}.dependencies
         repo sync -j$(nproc --all)
+      working-directory: ${{ steps.pwd.outputs.workdir }}
       continue-on-error: true
 
     - name: Set Swap Space
@@ -146,7 +150,8 @@ jobs:
         source build/envsetup.sh
         export ALLOW_MISSING_DEPENDENCIES=true
         lunch ${{ github.event.inputs.MAKEFILE_NAME }}-eng && make clean && make ${{ github.event.inputs.BUILD_TARGET }}image -j$(nproc --all)
-
+      working-directory: ${{ steps.pwd.outputs.workdir }}
+      
     - name: Upload to Release
       uses: softprops/action-gh-release@v1
       with:
