@@ -142,6 +142,7 @@ jobs:
       run: |
         source build/envsetup.sh
         repopick 5405 5540
+      working-directory: ${{ steps.pwd.outputs.workdir }}
 
     - name: Building Custom Recovery
       run: |
