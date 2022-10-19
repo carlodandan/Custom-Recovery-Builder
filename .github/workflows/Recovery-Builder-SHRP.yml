@@ -1,0 +1,164 @@
+name: Recovery Builder - SHRP
+
+# Credits to:
+# https://github.com/that1 for ldcheck and libneeds script
+# https://github.com/TeamWin for QCom' Decryption Guide 
+# https://github.com/SHRP for SHRP Manifest
+# https://github.com/azwhikaru for Recovery Builder Template
+# And all Contributors in every repositories I used
+
+on:
+  workflow_dispatch:
+    inputs:
+      MANIFEST_URL:
+        description: 'Manifest'
+        required: true
+        default: ''
+        type: choice
+        options:
+        - https://github.com/SHRP/platform_manifest_twrp_omni
+      MANIFEST_BRANCH:
+        description: 'Manifest Branch'
+        required: true
+        default: ''
+        type: choice
+        options:
+        - v3_11.0
+        - v3_10.0
+        - v3_9.0
+      DEVICE_TREE:
+        description: 'Custom Recovery Tree'
+        required: true
+        default: 'https://github.com/cd-Spidey/custom_recovery_tree_xiaomi_cannong'
+      DEVICE_TREE_BRANCH:
+        description: 'Custom Recovery Tree Branch'
+        required: true
+        default: 'android-12.1'
+      DEVICE_PATH:
+        description: 'Specify your device path.'
+        required: true
+        default: 'device/xiaomi/cannong'
+      DEVICE_NAME:
+        description: 'Specify your Device Codename.'
+        required: true
+        default: 'cannong'
+      MAKEFILE_NAME:
+        description: 'Specify your twrp/omni_codename'
+        required: true
+        default: 'twrp_cannong'
+      BUILD_TARGET:
+        description: 'Specify your Build Target'
+        required: true
+        default: 'recovery'
+        type: choice
+        options:
+        - boot
+        - recovery
+        - vendor_boot
+      FILE_TO_CHECK:
+        description: 'Specify which libs to check'
+        required: true
+        default: 'system/bin/qseecomd'
+
+jobs:
+  build:
+    if: github.event.repository.owner.id == github.event.sender.id
+    runs-on: ubuntu-20.04
+    steps:
+    - name: Check Out
+      uses: actions/checkout@v3.1.0
+
+    - name: Cleanup
+      uses: rokibhasansagar/slimhub_actions@main
+
+    - name: Prepare the environment
+      run: |
+        sudo dpkg --add-architecture i386
+        sudo apt update
+        sudo apt -y upgrade
+        sudo apt -y install checkpolicy gperf gcc-multilib gcc-10-multilib g++-multilib g++-10-multilib lib32z1 libc6-dev libncurses5 lib32ncurses5-dev x11proto-core-dev libx11-dev tree lib32z-dev libgl1-mesa-dev libxml2-utils xsltproc bc ccache lib32readline-dev lib32z1-dev liblz4-tool libncurses5-dev libsdl1.2-dev libwxgtk3.0-gtk3-dev libxml2 lzop pngcrush schedtool squashfs-tools imagemagick libbz2-dev lzma ncftp qemu-user-static libstdc++-10-dev python
+
+    - name: Install OpenJDK
+      uses: actions/setup-java@v3.5.1
+      with:
+        distribution: 'zulu'
+        java-version: '8'
+      
+    - name: Install repo
+      run: |
+        mkdir ~/bin
+        curl https://storage.googleapis.com/git-repo-downloads/repo > ~/bin/repo
+        chmod a+x ~/bin/repo
+        sudo ln -sf ~/bin/repo /usr/bin/repo
+      
+    - name: Initialize repo
+      run: |
+        mkdir workspace
+        cd workspace
+        echo "workdir=$(pwd)" >> $GITHUB_OUTPUT
+        git config --global user.name "Carlo Dandan"
+        git config --global user.email "jasminecarlo01@gmail.com"
+        repo init --depth=1 -u ${{ github.event.inputs.MANIFEST_URL }} -b ${{ github.event.inputs.MANIFEST_BRANCH }}
+      id: pwd
+        
+    - name: Repo Sync
+      run: |
+        repo sync -j$(nproc --all) --force-sync
+      working-directory: workspace
+      
+    - name: Clone device tree
+      run: |
+        git clone ${{ github.event.inputs.DEVICE_TREE }} -b ${{ github.event.inputs.DEVICE_TREE_BRANCH }} ./${{ github.event.inputs.DEVICE_PATH }}
+      working-directory: ${{ steps.pwd.outputs.workdir }}
+
+    - name: Check Build Tree
+      uses: haya14busa/action-cond@v1
+      id: buildtree
+      with:
+        cond: ${{ github.event.inputs.MANIFEST_BRANCH == 'twrp-11' || github.event.inputs.MANIFEST_BRANCH == 'twrp-12.1' }}
+        if_true: twrp
+        if_false: omni
+
+    - name: Sync Device Dependencies
+      run: |
+        bash ${GITHUB_WORKSPACE}/.github/workflows/dependencies.sh ${{ github.event.inputs.DEVICE_PATH }}/${{ steps.buildtree.outputs.value }}.dependencies
+        repo sync -j$(nproc --all)
+      working-directory: ${{ steps.pwd.outputs.workdir }}
+      continue-on-error: true
+
+    - name: Set Swap Space
+      uses: pierotofy/set-swap-space@master
+      with:
+        swap-size-gb: 12
+
+    - name: Check Build Branch
+      if: ${{ github.event.inputs.MANIFEST_BRANCH == 'twrp-12.1' }}
+      run: |
+        source build/envsetup.sh
+        repopick 5405 5540
+      working-directory: ${{ steps.pwd.outputs.workdir }}
+
+    - name: Building Custom Recovery
+      run: |
+        source build/envsetup.sh
+        export ALLOW_MISSING_DEPENDENCIES=true
+        lunch ${{ github.event.inputs.MAKEFILE_NAME }}-eng && make clean && make ${{ github.event.inputs.BUILD_TARGET }}image -j$(nproc --all)
+      working-directory: ${{ steps.pwd.outputs.workdir }}
+      
+    - name: Upload to Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: workspace/out/target/product/${{ github.event.inputs.DEVICE_NAME }}/${{ github.event.inputs.BUILD_TARGET }}.img
+        name: unofficial-${{ github.event.inputs.MANIFEST_BRANCH }}-${{ github.event.inputs.DEVICE_NAME }}-${{ github.event.inputs.BUILD_TARGET }}-${{ github.run_id }}
+        tag_name: ${{ github.run_id }}
+        body: |
+          Manifest: ${{ github.event.inputs.MANIFEST_URL }} -b ${{ github.event.inputs.MANIFEST_BRANCH }}
+          Device: unofficial-${{ github.event.inputs.MANIFEST_BRANCH }}-${{ github.event.inputs.DEVICE_NAME }}.img
+
+    - name: Run LDCheck
+      run: |
+        cd workspace/out/target/product/${{ github.event.inputs.DEVICE_NAME }}/recovery/root
+        python3 ldcheck -p system/lib64:vendor/lib64 -d ${{ github.event.inputs.FILE_TO_CHECK }}
+      continue-on-error: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
