@@ -23,7 +23,7 @@ on:
         default: ''
         type: choice
         options:
-        - git clone https://gitlab.com/OrangeFox/misc/scripts
+        - https://gitlab.com/OrangeFox/misc/scripts
       MANIFEST_BRANCH:
         description: 'Manifest Branch'
         required: true
