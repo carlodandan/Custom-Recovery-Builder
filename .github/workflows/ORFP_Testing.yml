@@ -121,8 +121,7 @@ jobs:
       run: |
         cd fox_${{ github.event.inputs.MANIFEST_BRANCH }}
         source build/envsetup.sh
-        lunch ${{ github.event.inputs.MAKEFILE_NAME }}-eng
-        mka ${{ github.event.inputs.BUILD_TARGET }}image
+        lunch ${{ github.event.inputs.MAKEFILE_NAME }}-eng && make clean && mka --j$(nproc --all) ${{ github.event.inputs.BUILD_TARGET }}image
       working-directory: ${{ steps.pwd.outputs.workdir }}
       
     - name: Upload to Release
