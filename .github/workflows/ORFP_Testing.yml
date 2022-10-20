@@ -69,6 +69,12 @@ jobs:
 
     - name: Cleanup
       uses: rokibhasansagar/slimhub_actions@main
+      
+    - name: Prepare the environment
+      run: |
+        sudo apt update
+        sudo apt -y upgrade
+        sudo apt -y install aria2
 
     - name: Install OpenJDK
       uses: actions/setup-java@v3.5.1
@@ -78,18 +84,15 @@ jobs:
       
     - name: Run OFRP Scripts
       run: |
-        cd ~
-        sudo apt install git aria2 -y
         git clone https://gitlab.com/OrangeFox/misc/scripts
         cd scripts
         sudo bash setup/android_build_env.sh
-        sudo bash setup/install_android_sdk.sh
       continue-on-error: true
       
     - name: Clone Sync Script
       run: |
-        mkdir ~/OrangeFox_sync
-        cd ~/OrangeFox_sync
+        mkdir workspace
+        cd workspace
         echo "workdir=$(pwd)" >> $GITHUB_OUTPUT
         git config --global user.name "Carlo Dandan"
         git config --global user.email "jasminecarlo01@gmail.com"
@@ -98,9 +101,9 @@ jobs:
       
     - name: Sync OFRP Sources
       run: |
-        cd ~/OrangeFox_sync/sync/
-        ./orangefox_sync.sh --branch ${{ github.event.inputs.MANIFEST_BRANCH }} --path ~/fox_${{ github.event.inputs.MANIFEST_BRANCH }}
-      working-directory: OrangeFox_sync
+        cd sync/
+        ./orangefox_sync.sh --branch ${{ github.event.inputs.MANIFEST_BRANCH }} --path ${GITHUB_WORKSPACE}/workspace/fox_${{ github.event.inputs.MANIFEST_BRANCH }}
+      working-directory: workspace
       continue-on-error: true
 
     - name: Clone Device Tree
