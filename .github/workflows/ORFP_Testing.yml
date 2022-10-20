@@ -97,7 +97,7 @@ jobs:
         sudo bash setup/install_android_sdk.sh
       continue-on-error: true
       
-    - name: Sync OFRP Sources
+    - name: Clone Sync Script
       run: |
         mkdir workspace
         cd workspace
@@ -105,11 +105,15 @@ jobs:
         git config --global user.name "Carlo Dandan"
         git config --global user.email "jasminecarlo01@gmail.com"
         git clone https://gitlab.com/OrangeFox/sync.git
+      id: pwd
+      
+    - name: Sync OFRP Sources
+      run: |
         cd sync
         ./orangefox_sync.sh --branch ${{ github.event.inputs.MANIFEST_BRANCH }} --path ${GITHUB_WORKSPACE}/workspace/fox_${{ github.event.inputs.MANIFEST_BRANCH }}
-      id: pwd
+      working-directory: workspace
       continue-on-error: true
-      
+
     - name: Clone Device Tree
       run: |
         ls
@@ -125,6 +129,7 @@ jobs:
     - name: Building Custom Recovery
       run: |
         cd fox_${{ github.event.inputs.MANIFEST_BRANCH }}
+        ls
         source build/envsetup.sh
         export ALLOW_MISSING_DEPENDENCIES=true
         export FOX_USE_TWRP_RECOVERY_IMAGE_BUILDER=1
