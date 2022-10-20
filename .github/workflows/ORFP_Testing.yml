@@ -95,6 +95,7 @@ jobs:
         cd scripts
         sudo bash setup/android_build_env.sh
         sudo bash setup/install_android_sdk.sh
+      continue-on-error: true
       
     - name: Sync OFRP Sources
       run: |
