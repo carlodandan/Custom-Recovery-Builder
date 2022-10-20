@@ -137,12 +137,14 @@ jobs:
       with:
         swap-size-gb: 12
 
-    - name: Check Build Branch
-      if: ${{ github.event.inputs.MANIFEST_BRANCH == 'twrp-12.1' }}
-      run: |
-        source build/envsetup.sh
-        repopick 5405 5540
-      working-directory: ${{ steps.pwd.outputs.workdir }}
+# Removed Checking Build Branch, since v3.7.0 already sync all necessary repo-pick.
+#     - name: Check Build Branch
+#      if: ${{ github.event.inputs.MANIFEST_BRANCH == 'twrp-12.1' }}
+#      run: |
+#        source build/envsetup.sh
+#        repopick 5405 5540
+#      working-directory: ${{ steps.pwd.outputs.workdir }}
+# But you can re-enable this if you think its necessary, your choice.
 
     - name: Building Custom Recovery
       run: |
@@ -161,6 +163,7 @@ jobs:
           Manifest: ${{ github.event.inputs.MANIFEST_URL }} -b ${{ github.event.inputs.MANIFEST_BRANCH }}
           Device: unofficial-${{ github.event.inputs.MANIFEST_BRANCH }}-${{ github.event.inputs.DEVICE_NAME }}.img
 
+# LDCheck works not just in qseecomd, you can target a different file, as long as it is existing in target-out folder.
     - name: Run LDCheck
       run: |
         cd workspace/out/target/product/${{ github.event.inputs.DEVICE_NAME }}/recovery/root
