@@ -1,4 +1,4 @@
-name: Recovery Builder - ORRP #Testing
+name: Recovery Builder - ORRP Testing
 
 # Credits to:
 # https://github.com/that1 for ldcheck and libneeds script
@@ -106,12 +106,13 @@ jobs:
         git config --global user.email "jasminecarlo01@gmail.com"
         git clone https://gitlab.com/OrangeFox/sync.git
         cd sync
-        bash orangefox_sync.sh --branch ${{ github.event.inputs.MANIFEST_BRANCH }} --path ${GITHUB_WORKSPACE}/workspace/fox_${{ github.event.inputs.MANIFEST_BRANCH }}
+        ./orangefox_sync.sh --branch ${{ github.event.inputs.MANIFEST_BRANCH }} --path ${GITHUB_WORKSPACE}/workspace/fox_${{ github.event.inputs.MANIFEST_BRANCH }}
       id: pwd
       continue-on-error: true
       
     - name: Clone Device Tree
       run: |
+        ls
         cd fox_${{ github.event.inputs.MANIFEST_BRANCH }}
         git clone ${{ github.event.inputs.DEVICE_TREE }} -b ${{ github.event.inputs.DEVICE_TREE_BRANCH }} ${{ github.event.inputs.DEVICE_PATH }}
       working-directory: ${{ steps.pwd.outputs.workdir }}
