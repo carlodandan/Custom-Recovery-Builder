@@ -121,6 +121,9 @@ jobs:
       run: |
         cd fox_${{ github.event.inputs.MANIFEST_BRANCH }}
         source build/envsetup.sh
+        export USE_CCACHE=1
+        export CCACHE_SIZE="50G"
+        export CCACHE_DIR="$HOME/work/.ccache"
         lunch ${{ github.event.inputs.MAKEFILE_NAME }}-eng && make clean && mka --j$(nproc --all) ${{ github.event.inputs.BUILD_TARGET }}image
       working-directory: ${{ steps.pwd.outputs.workdir }}
       
