@@ -119,7 +119,6 @@ jobs:
 
     - name: Building Custom Recovery
       run: |
-        cd fox_${{ github.event.inputs.MANIFEST_BRANCH }}
         source build/envsetup.sh
         export USE_CCACHE=1
         export CCACHE_SIZE="50G"
