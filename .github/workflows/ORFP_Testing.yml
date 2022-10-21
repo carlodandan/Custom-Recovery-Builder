@@ -121,11 +121,11 @@ jobs:
     - name: Building Custom Recovery
       run: |
         cd fox_${{ github.event.inputs.MANIFEST_BRANCH }}
-        source build/make/envsetup.sh
+        source build/envsetup.sh
         export USE_CCACHE=1
         export CCACHE_SIZE="50G"
         export CCACHE_DIR="${GITHUB_WORKSPACE}/workspace/.ccache"
-        lunch ${{ github.event.inputs.MAKEFILE_NAME }}-eng && mka -j$(nproc --all) adbd ${{ github.event.inputs.BUILD_TARGET }}image
+        lunch ${{ github.event.inputs.MAKEFILE_NAME }}-eng && mka adbd ${{ github.event.inputs.BUILD_TARGET }}image
       working-directory: ${{ steps.pwd.outputs.workdir }}
       
     - name: Upload to Release
