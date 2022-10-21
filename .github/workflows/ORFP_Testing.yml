@@ -74,7 +74,7 @@ jobs:
       run: |
         sudo apt update
         sudo apt -y upgrade
-        sudo apt -y install aria2
+        sudo apt -y install git aria2
 
     - name: Install OpenJDK
       uses: actions/setup-java@v3.5.1
@@ -102,14 +102,13 @@ jobs:
 
     - name: Sync OFRP Sources
       run: |
-        cd sync/
-        ./orangefox_sync.sh --branch ${{ github.event.inputs.MANIFEST_BRANCH }} --path ${GITHUB_WORKSPACE}/workspace/fox_${{ github.event.inputs.MANIFEST_BRANCH }}
+        cd sync
+        ./orangefox_sync.sh --branch ${{ github.event.inputs.MANIFEST_BRANCH }} --path ${GITHUB_WORKSPACE}/workspace
       working-directory: workspace
       continue-on-error: true
 
     - name: Clone Device Tree
       run: |
-        cd fox_${{ github.event.inputs.MANIFEST_BRANCH }}
         git clone ${{ github.event.inputs.DEVICE_TREE }} -b ${{ github.event.inputs.DEVICE_TREE_BRANCH }} ${{ github.event.inputs.DEVICE_PATH }}
       working-directory: ${{ steps.pwd.outputs.workdir }}
 
@@ -120,17 +119,9 @@ jobs:
 
     - name: Building Custom Recovery
       run: |
-        cd fox_${{ github.event.inputs.MANIFEST_BRANCH }}
-        ls
-        . build/envsetup.sh
-        echo "Done Environment Setup."
-        export USE_CCACHE=1
-        export CCACHE_SIZE="50G"
-        export CCACHE_DIR="${GITHUB_WORKSPACE}/workspace/.ccache"
+        source build/envsetup.sh
         lunch ${{ github.event.inputs.MAKEFILE_NAME }}-eng
-        echo "Done lunching combo."
         mka adbd ${{ github.event.inputs.BUILD_TARGET }}image
-        echo "Done making recovery.img"
       working-directory: ${{ steps.pwd.outputs.workdir }}
       
     - name: Upload to Release
