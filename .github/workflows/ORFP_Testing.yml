@@ -121,11 +121,16 @@ jobs:
     - name: Building Custom Recovery
       run: |
         cd fox_${{ github.event.inputs.MANIFEST_BRANCH }}
-        source build/envsetup.sh
+        ls
+        . build/envsetup.sh
+        echo "Done Environment Setup."
         export USE_CCACHE=1
         export CCACHE_SIZE="50G"
         export CCACHE_DIR="${GITHUB_WORKSPACE}/workspace/.ccache"
-        lunch ${{ github.event.inputs.MAKEFILE_NAME }}-eng && mka adbd ${{ github.event.inputs.BUILD_TARGET }}image
+        lunch ${{ github.event.inputs.MAKEFILE_NAME }}-eng
+        echo "Done lunching combo."
+        mka adbd ${{ github.event.inputs.BUILD_TARGET }}image
+        echo "Done making recovery.img"
       working-directory: ${{ steps.pwd.outputs.workdir }}
       
     - name: Upload to Release
