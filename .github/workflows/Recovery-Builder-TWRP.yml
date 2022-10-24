@@ -72,7 +72,7 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
     - name: Check Out
-      uses: actions/checkout@v3.1.0
+      uses: actions/checkout@v2.5.0
 
     - name: Cleanup
       uses: rokibhasansagar/slimhub_actions@main
@@ -85,10 +85,10 @@ jobs:
         sudo apt -y install checkpolicy gperf gcc-multilib gcc-10-multilib g++-multilib g++-10-multilib lib32z1 libc6-dev libncurses5 lib32ncurses5-dev x11proto-core-dev libx11-dev tree lib32z-dev libgl1-mesa-dev libxml2-utils xsltproc bc ccache lib32readline-dev lib32z1-dev liblz4-tool libncurses5-dev libsdl1.2-dev libwxgtk3.0-gtk3-dev libxml2 lzop pngcrush schedtool squashfs-tools imagemagick libbz2-dev lzma ncftp qemu-user-static libstdc++-10-dev python
 
     - name: Install OpenJDK
-      uses: actions/setup-java@v3.5.1
+      uses: actions/setup-java@v3.6.0
       with:
         distribution: 'zulu'
-        java-version: '8'
+        java-version: '17'
       
     - name: Install repo
       run: |
@@ -97,6 +97,11 @@ jobs:
         chmod a+x ~/bin/repo
         sudo ln -sf ~/bin/repo /usr/bin/repo
       
+    - name: Set Swap Space
+      uses: pierotofy/set-swap-space@master
+      with:
+        swap-size-gb: 12
+
     - name: Initialize repo
       run: |
         mkdir workspace
@@ -131,20 +136,6 @@ jobs:
         repo sync -j$(nproc --all)
       working-directory: ${{ steps.pwd.outputs.workdir }}
       continue-on-error: true
-
-    - name: Set Swap Space
-      uses: pierotofy/set-swap-space@master
-      with:
-        swap-size-gb: 12
-
-# Removed Checking Build Branch, since v3.7.0 already sync all necessary repo-pick.
-#     - name: Check Build Branch
-#      if: ${{ github.event.inputs.MANIFEST_BRANCH == 'twrp-12.1' }}
-#      run: |
-#        source build/envsetup.sh
-#        repopick 5405 5540
-#      working-directory: ${{ steps.pwd.outputs.workdir }}
-# But you can re-enable this if you think its necessary, your choice.
 
     - name: Building Custom Recovery
       run: |
