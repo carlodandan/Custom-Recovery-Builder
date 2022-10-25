@@ -75,22 +75,14 @@ jobs:
     - name: Prepare the environment
       run: |
         sudo dpkg --add-architecture i386
-        sudo apt update
-        sudo apt -y upgrade
-        sudo apt -y install checkpolicy gperf gcc-multilib gcc-10-multilib g++-multilib g++-10-multilib lib32z1 libc6-dev libncurses5 lib32ncurses5-dev x11proto-core-dev libx11-dev tree lib32z-dev libgl1-mesa-dev libxml2-utils xsltproc bc ccache lib32readline-dev lib32z1-dev liblz4-tool libncurses5-dev libsdl1.2-dev libwxgtk3.0-gtk3-dev libxml2 lzop pngcrush schedtool squashfs-tools imagemagick libbz2-dev lzma ncftp qemu-user-static libstdc++-10-dev python
-
+        git clone https://github.com/cd-Spidey/cd-Spidey/ ./buildenv
+        sudo bash buildenv/setup/android/build_env.sh
+        
     - name: Install OpenJDK
       uses: actions/setup-java@v3.5.1
       with:
         distribution: 'zulu'
-        java-version: '8'
-      
-    - name: Install repo
-      run: |
-        mkdir ~/bin
-        curl https://storage.googleapis.com/git-repo-downloads/repo > ~/bin/repo
-        chmod a+x ~/bin/repo
-        sudo ln -sf ~/bin/repo /usr/bin/repo
+        java-version: '17'
       
     - name: Initialize repo
       run: |
@@ -146,10 +138,15 @@ jobs:
         lunch ${{ github.event.inputs.MAKEFILE_NAME }}-eng && make clean && make ${{ github.event.inputs.BUILD_TARGET }}image -j$(nproc --all)
       working-directory: ${{ steps.pwd.outputs.workdir }}
       
+    - name: Rename it to PitchBlack
+      run: |
+        cd workspace/out/target/product/${{ github.event.inputs.DEVICE_NAME }}/${{ github.event.inputs.BUILD_TARGET }}.img
+        mv recovery.img PitchBlack-${{ github.event.inputs.MANIFEST_BRANCH }}-${{ github.event.inputs.DEVICE_NAME }}-$(date +%y.%m.%d).img
+      
     - name: Upload to Release
       uses: softprops/action-gh-release@v1
       with:
-        files: workspace/out/target/product/${{ github.event.inputs.DEVICE_NAME }}/${{ github.event.inputs.BUILD_TARGET }}.img
+        files: workspace/out/target/product/${{ github.event.inputs.DEVICE_NAME }}/PitchBlack*.img
         name: unofficial-${{ github.event.inputs.MANIFEST_BRANCH }}-${{ github.event.inputs.DEVICE_NAME }}-${{ github.event.inputs.BUILD_TARGET }}-${{ github.run_id }}
         tag_name: ${{ github.run_id }}
         body: |
