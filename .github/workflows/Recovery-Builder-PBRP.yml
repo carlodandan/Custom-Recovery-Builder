@@ -66,6 +66,15 @@ jobs:
     if: github.event.repository.owner.id == github.event.sender.id
     runs-on: ubuntu-20.04
     steps:
+    - name: Set Current Date #For later usage
+      id: today
+      run: |
+        echo "date=$(date +%Y%m%d%H%M)" >> $GITHUB_ENV
+        
+    - name: Get Current Date
+      run: |
+        echo ${{ steps.today.outputs.date }}
+        
     - name: Check Out
       uses: actions/checkout@v3.1.0
 
@@ -82,12 +91,6 @@ jobs:
       run: |
         git clone https://github.com/cd-Spidey/cd-Spidey/ ./opendjk
         sudo bash opendjk/setup/android/open_jdk.sh
-
-    - name: Get Current Date #For later usage
-      run: |
-        id: today
-        echo "date_time=$(date +%Y%m%d%H%M)" >> $GITHUB_ENV
-        echo ${{ steps.today.outputs.date_time }}
       
     - name: Initialize repo
       run: |
@@ -146,7 +149,7 @@ jobs:
     - name: Rename it to PitchBlack
       run: |
         cd workspace/out/target/product/${{ github.event.inputs.DEVICE_NAME }}
-        mv recovery.img PitchBlack-${{ github.event.inputs.MANIFEST_BRANCH }}-${{ github.event.inputs.DEVICE_NAME }}-${{ steps.today.outputs.date_time }}.img
+        mv recovery.img PitchBlack-${{ github.event.inputs.MANIFEST_BRANCH }}-${{ github.event.inputs.DEVICE_NAME }}-${{ steps.today.outputs.date }}.img
       
     - name: Upload to Release
       uses: softprops/action-gh-release@v1
