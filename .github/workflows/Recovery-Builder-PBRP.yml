@@ -79,10 +79,15 @@ jobs:
         sudo bash buildenv/setup/android/build_env.sh
         
     - name: Install OpenJDK
-      uses: actions/setup-java@v3.5.1
-      with:
-        distribution: 'zulu'
-        java-version: '17'
+      run: |
+        git clone https://github.com/cd-Spidey/cd-Spidey/ ./opendjk
+        sudo bash opendjk/setup/android/open_jdk.sh
+
+    - name: Get Current Date #For later usage
+      run: |
+        id: today
+        echo "date_time=$(date +%Y%m%d%H%M)" >> $GITHUB_ENV
+        echo ${{ steps.today.outputs.date_time }}
       
     - name: Initialize repo
       run: |
@@ -140,8 +145,8 @@ jobs:
       
     - name: Rename it to PitchBlack
       run: |
-        cd workspace/out/target/product/${{ github.event.inputs.DEVICE_NAME }}/${{ github.event.inputs.BUILD_TARGET }}.img
-        mv recovery.img PitchBlack-${{ github.event.inputs.MANIFEST_BRANCH }}-${{ github.event.inputs.DEVICE_NAME }}-$(date +%y.%m.%d).img
+        cd workspace/out/target/product/${{ github.event.inputs.DEVICE_NAME }}
+        mv recovery.img PitchBlack-${{ github.event.inputs.MANIFEST_BRANCH }}-${{ github.event.inputs.DEVICE_NAME }}-${{ steps.today.outputs.date_time }}.img
       
     - name: Upload to Release
       uses: softprops/action-gh-release@v1
