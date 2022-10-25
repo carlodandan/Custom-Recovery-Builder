@@ -71,6 +71,11 @@ jobs:
     if: github.event.repository.owner.id == github.event.sender.id
     runs-on: ubuntu-20.04
     steps:
+    - name: Set Current Date #For later usage
+      id: today
+      run: |
+        echo "date=$(date +%Y%m%d)" >> $GITHUB_OUTPUT
+        
     - name: Check Out
       uses: actions/checkout@v2.5.0
 
@@ -82,7 +87,7 @@ jobs:
       with:
         swap-size-gb: 12
 
-    - name: Prepare the environment
+    - name: Prepare the Environment
       run: |
         sudo dpkg --add-architecture i386
         git clone https://github.com/cd-Spidey/cd-Spidey/ ./buildenv
@@ -93,7 +98,7 @@ jobs:
         git clone https://github.com/cd-Spidey/cd-Spidey/ ./opendjk
         sudo bash opendjk/setup/android/open_jdk.sh
 
-    - name: Initialize repo
+    - name: Initialize Repo
       run: |
         mkdir workspace
         cd workspace
@@ -108,7 +113,7 @@ jobs:
         repo sync -j$(nproc --all) --force-sync
       working-directory: workspace
       
-    - name: Clone device tree
+    - name: Clone Device Tree
       run: |
         git clone ${{ github.event.inputs.DEVICE_TREE }} -b ${{ github.event.inputs.DEVICE_TREE_BRANCH }} ./${{ github.event.inputs.DEVICE_PATH }}
       working-directory: ${{ steps.pwd.outputs.workdir }}
@@ -121,29 +126,31 @@ jobs:
         if_true: twrp
         if_false: omni
 
-    - name: Sync Device Dependencies
+    - name: Sync Dependencies
       run: |
         bash ${GITHUB_WORKSPACE}/.github/workflows/dependencies.sh ${{ github.event.inputs.DEVICE_PATH }}/${{ steps.buildtree.outputs.value }}.dependencies
         repo sync -j$(nproc --all)
       working-directory: ${{ steps.pwd.outputs.workdir }}
       continue-on-error: true
 
-    - name: Building Custom Recovery
+    - name: Building Recovery
       run: |
         source build/envsetup.sh
         export ALLOW_MISSING_DEPENDENCIES=true
         lunch ${{ github.event.inputs.MAKEFILE_NAME }}-eng && make clean && make ${{ github.event.inputs.BUILD_TARGET }}image -j$(nproc --all)
       working-directory: ${{ steps.pwd.outputs.workdir }}
       
-    - name: Upload to Release
-      uses: softprops/action-gh-release@v1
+    - name: Renaming into TWRP
+      run: |
+        cd out/target/product/${{ github.event.inputs.DEVICE_NAME }}
+        mv recovery.img ${{ github.event.inputs.MANIFEST_BRANCH }}-${{ github.event.inputs.DEVICE_NAME }}-${{ steps.today.outputs.date }}.img
+      working-directory: ${{ steps.pwd.outputs.workdir }}
+      
+    - name: Upload as Artifact
+      uses: actions/upload-artifact@v3.1.1
       with:
-        files: workspace/out/target/product/${{ github.event.inputs.DEVICE_NAME }}/${{ github.event.inputs.BUILD_TARGET }}.img
-        name: unofficial-${{ github.event.inputs.MANIFEST_BRANCH }}-${{ github.event.inputs.DEVICE_NAME }}-${{ github.event.inputs.BUILD_TARGET }}-${{ github.run_id }}
-        tag_name: ${{ github.run_id }}
-        body: |
-          Manifest: ${{ github.event.inputs.MANIFEST_URL }} -b ${{ github.event.inputs.MANIFEST_BRANCH }}
-          Device: unofficial-${{ github.event.inputs.MANIFEST_BRANCH }}-${{ github.event.inputs.DEVICE_NAME }}.img
+        path: workspace/out/target/product/${{ github.event.inputs.DEVICE_NAME }}/${{ github.event.inputs.MANIFEST_BRANCH }}*.img
+        name: unofficial-${{ github.event.inputs.MANIFEST_BRANCH }}-${{ github.event.inputs.DEVICE_NAME }}-${{ github.event.inputs.BUILD_TARGET }}-${{ steps.today.outputs.date }}
 
 # LDCheck works not just in qseecomd, you can target a different file, as long as it is existing in target-out folder.
     - name: Run LDCheck
