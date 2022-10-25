@@ -69,7 +69,7 @@ jobs:
     - name: Set Current Date #For later usage
       id: today
       run: |
-        echo "date=$(date +%Y%m%d%H%M)" >> $GITHUB_OUTPUT
+        echo "date=$(date +%Y%m%d)" >> $GITHUB_OUTPUT
         
     - name: Get Current Date
       run: |
