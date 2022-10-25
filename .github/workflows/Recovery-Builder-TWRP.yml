@@ -146,12 +146,16 @@ jobs:
         mv recovery.img ${{ github.event.inputs.MANIFEST_BRANCH }}-${{ github.event.inputs.DEVICE_NAME }}-${{ steps.today.outputs.date }}.img
       working-directory: ${{ steps.pwd.outputs.workdir }}
       
-    - name: Upload as Artifact
-      uses: actions/upload-artifact@v3.1.1
+    - name: Upload to Release
+      uses: softprops/action-gh-release@v1
       with:
-        path: workspace/out/target/product/${{ github.event.inputs.DEVICE_NAME }}/${{ github.event.inputs.MANIFEST_BRANCH }}*.img
-        name: unofficial-${{ github.event.inputs.MANIFEST_BRANCH }}-${{ github.event.inputs.DEVICE_NAME }}-${{ github.event.inputs.BUILD_TARGET }}-${{ steps.today.outputs.date }}
-
+        files: workspace/out/target/product/${{ github.event.inputs.DEVICE_NAME }}/${{ github.event.inputs.MANIFEST_BRANCH }}*.img
+        name: Unofficial TWRP for ${{ github.event.inputs.DEVICE_NAME }} - Build ${{ steps.today.outputs.date }}
+        tag_name: ${{ github.run_id }}-${{ steps.today.outputs.date }}
+        body: |
+          Device: ${{ github.event.inputs.DEVICE_NAME }} TWRP
+          Manifest: ${{ github.event.inputs.MANIFEST_URL }} -b ${{ github.event.inputs.MANIFEST_BRANCH }}
+          
 # LDCheck works not just in qseecomd, you can target a different file, as long as it is existing in target-out folder.
     - name: Run LDCheck
       run: |
