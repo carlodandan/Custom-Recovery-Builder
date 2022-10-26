@@ -33,27 +33,27 @@ on:
         - twrp-6.0
         - twrp-5.1
       DEVICE_TREE:
-        description: 'Custom Recovery Tree'
+        description: 'Custom Recovery Tree' # Your already made Device Tree for TWRP
         required: true
         default: 'https://github.com/cd-Spidey/custom_recovery_tree_xiaomi_cannong'
       DEVICE_TREE_BRANCH:
-        description: 'Custom Recovery Tree Branch'
+        description: 'Custom Recovery Tree Branch' # Your Device Tree Branch, make sure it's right.
         required: true
         default: 'android-12.1'
       DEVICE_PATH:
-        description: 'Specify your device path.'
+        description: 'Specify your Device Path' # As is, just like your DEVICE_PATH in your BoardConfig.mk
         required: true
         default: 'device/xiaomi/cannong'
       DEVICE_NAME:
-        description: 'Specify your Device Codename.'
+        description: 'Specify your Device Codename' # As is, just like your PRODUCT_DEVICE in your device tree.
         required: true
         default: 'cannong'
       MAKEFILE_NAME:
-        description: 'Specify your twrp/omni_codename'
+        description: 'Specify your Makefile Name' # Look for twrp_ or omni_codename.mk, just remove the .mk
         required: true
         default: 'twrp_cannong'
       BUILD_TARGET:
-        description: 'Specify your Build Target'
+        description: 'Specify your Build Target' # Pick among boot, recovery and vendor_boot
         required: true
         default: 'recovery'
         type: choice
@@ -62,7 +62,7 @@ on:
         - recovery
         - vendor_boot
       FILE_TO_CHECK:
-        description: 'Specify which libs to check'
+        description: 'Specify which libs to check' # Use it know what kind of dependencies your missing for decryption.
         required: true
         default: 'system/bin/qseecomd'
 
@@ -71,7 +71,7 @@ jobs:
     if: github.event.repository.owner.id == github.event.sender.id
     runs-on: ubuntu-20.04
     steps:
-    - name: Set Current Date #For later usage
+    - name: Set Current Date # Output will be use in final name of recovery.
       id: today
       run: |
         echo "date=$(date +%Y%m%d)" >> $GITHUB_OUTPUT
@@ -153,7 +153,7 @@ jobs:
         name: Unofficial TWRP for ${{ github.event.inputs.DEVICE_NAME }} - Build ${{ steps.today.outputs.date }}
         tag_name: ${{ github.run_id }}-${{ steps.today.outputs.date }}
         body: |
-          Device: ${{ github.event.inputs.DEVICE_NAME }} TWRP
+          Device: ${{ github.event.inputs.DEVICE_NAME }}
           Manifest: ${{ github.event.inputs.MANIFEST_URL }} -b ${{ github.event.inputs.MANIFEST_BRANCH }}
           
 # LDCheck works not just in qseecomd, you can target a different file, as long as it is existing in target-out folder.
