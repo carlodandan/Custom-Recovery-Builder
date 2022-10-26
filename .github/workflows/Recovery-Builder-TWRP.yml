@@ -90,12 +90,12 @@ jobs:
     - name: Prepare the Environment
       run: |
         sudo dpkg --add-architecture i386
-        git clone https://github.com/cd-Spidey/cd-Spidey/ ./buildenv
+        git clone https://github.com/cd-Spidey/Random.git ./buildenv
         sudo bash buildenv/setup/android/build_env.sh
         
     - name: Install OpenJDK
       run: |
-        git clone https://github.com/cd-Spidey/cd-Spidey/ ./opendjk
+        git clone https://github.com/cd-Spidey/Random.git ./opendjk
         sudo bash opendjk/setup/android/open_jdk.sh
 
     - name: Initialize Repo
