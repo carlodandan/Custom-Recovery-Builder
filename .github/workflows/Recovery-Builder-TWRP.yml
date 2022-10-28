@@ -128,7 +128,7 @@ jobs:
 
     - name: Sync Dependencies
       run: |
-        bash ${GITHUB_WORKSPACE}/.github/workflows/dependencies.sh ${{ github.event.inputs.DEVICE_PATH }}/${{ steps.buildtree.outputs.value }}.dependencies
+        bash ${GITHUB_WORKSPACE}/scripts/convert.sh ${{ github.event.inputs.DEVICE_PATH }}/${{ steps.buildtree.outputs.value }}.dependencies
         repo sync -j$(nproc --all)
       working-directory: ${{ steps.pwd.outputs.workdir }}
       continue-on-error: true
