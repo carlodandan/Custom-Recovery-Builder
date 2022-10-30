@@ -26,12 +26,7 @@ on:
         options:
         - twrp-12.1
         - twrp-11
-        - twrp-10.0-deprecated
         - twrp-9.0
-        - twrp-8.1
-        - twrp-7.1
-        - twrp-6.0
-        - twrp-5.1
       DEVICE_TREE:
         description: 'Custom Recovery Tree' # Your already made Device Tree for TWRP
         required: true
@@ -71,11 +66,6 @@ jobs:
     if: github.event.repository.owner.id == github.event.sender.id
     runs-on: ubuntu-latest
     steps:
-    - name: Set Properties # Output will be use in final name of recovery.
-      id: props
-      run: |
-        echo "date=$(date +%Y%m%d)" >> $GITHUB_OUTPUT
-        
     - name: Check Out
       uses: actions/checkout@v2.5.0
 
@@ -148,10 +138,15 @@ jobs:
         lunch ${{ github.event.inputs.MAKEFILE_NAME }}-eng && make clean && make ${{ github.event.inputs.BUILD_TARGET }}image -j$(nproc --all)
       working-directory: ${{ steps.pwd.outputs.workdir }}
       
+    - name: Set Properties # Output will be use in final name of recovery.
+      id: props
+      run: |
+        echo "date=$(date +%Y%m%d)" >> $GITHUB_OUTPUT
+      
     - name: Renaming into TWRP
       run: |
         cd out/target/product/${{ github.event.inputs.DEVICE_NAME }}
-        mv ${{ github.event.inputs.BUILD_TARGET }}.img ${{ github.event.inputs.MANIFEST_BRANCH }}-${{ github.event.inputs.DEVICE_NAME }}-${{ steps.props.outputs.date }}.img
+        mv ${{ github.event.inputs.BUILD_TARGET }}.img ${{ github.event.inputs.MANIFEST_BRANCH }}-3.7.0-${{ github.event.inputs.DEVICE_NAME }}-${{ steps.props.outputs.date }}.img
       working-directory: ${{ steps.pwd.outputs.workdir }}
       
     - name: Upload to Release
