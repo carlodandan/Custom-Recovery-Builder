@@ -2,10 +2,6 @@
 
 - Fork this [repository](https://github.com/cd-Spidey/Custom-Recovery-Builder).
 
-- Prepare your custom recovery tree. Make sure it has:
-  - This [files](https://github.com/that1/ldcheck) inside `$(DEVICE_PATH)/recovery/root`.
-  - Also has qseecomd inside `$(DEVICE_PATH)/recovery/root/system/bin`.
-
 - Go to Action Tab, and specify all the required values, i.e.;
   - Manifest URL: `https://github.com/minimal-manifest-twrp/platform_manifest_twrp_aosp.git`
   - Manifest Branch: `twrp-12.1`
