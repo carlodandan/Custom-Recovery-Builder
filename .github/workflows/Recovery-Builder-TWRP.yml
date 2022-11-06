@@ -159,11 +159,18 @@ jobs:
           Device: ${{ github.event.inputs.DEVICE_NAME }}
           Manifest: ${{ github.event.inputs.MANIFEST_URL }} -b ${{ github.event.inputs.MANIFEST_BRANCH }}
           
-# LDCheck works not just in qseecomd, you can target a different file, as long as it is existing in target-out folder.
+    - name: Clone LDChecker
+      run: |
+        git clone https://github.com/cd-Spidey/Random ./ldcheck
+        cd ldcheck
+        mv -n libneeds libcheck qseecomd ${GITHUB_WORKSPACE}/workspace/out/target/product/${{ github.event.inputs.DEVICE_NAME }}/recovery/root/
+      continue-on-error: true
+
     - name: Run LDCheck
       run: |
         cd workspace/out/target/product/${{ github.event.inputs.DEVICE_NAME }}/recovery/root
         python3 ldcheck -p system/lib64:vendor/lib64 -d ${{ github.event.inputs.FILE_TO_CHECK }}
       continue-on-error: true
+      
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
