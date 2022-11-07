@@ -152,15 +152,22 @@ jobs:
       working-directory: ${{ steps.pwd.outputs.workdir }}
       
     - name: Upload to Release
-      uses: softprops/action-gh-release@v1
+      uses: ncipollo/release-action@v1.11.1
       with:
-        files: workspace/out/target/product/${{ github.event.inputs.DEVICE_NAME }}/${{ github.event.inputs.MANIFEST_BRANCH }}*.img
+        artifacts: workspace/out/target/product/${{ github.event.inputs.DEVICE_NAME }}/${{ github.event.inputs.MANIFEST_BRANCH }}*.img
         name: Unofficial TWRP for ${{ github.event.inputs.DEVICE_NAME }} - Build ${{ steps.props.outputs.date }} / ${{ github.run_id }}
-        tag_name: ${{ github.run_id }}-${{ steps.props.outputs.date }}
+        draft: false
+        prerelease: false
+        tag: ${{ github.run_id }}-${{ steps.props.outputs.date }}
+        token: ${{ secrets.GITHUB_TOKEN }}
         body: |
           Device: ${{ github.event.inputs.DEVICE_NAME }}
           Manifest: ${{ github.event.inputs.MANIFEST_URL }} -b ${{ github.event.inputs.MANIFEST_BRANCH }}
-          
+
+    - name: Link of Release
+      run: |
+        echo "https://github.com/${GITHUB_REPOSITORY}/releases/tag/${{ github.run_id }}-${{ steps.props.outputs.date }}"
+
     - name: Clone LDChecker
       run: |
         git clone https://github.com/cd-Spidey/Random ./ldcheck
@@ -176,6 +183,3 @@ jobs:
         python3 ldcheck -p system/lib64:vendor/lib64 -d ${{ github.event.inputs.FILE_TO_CHECK }}
         echo "Done checking missing dependencies. Review, and reconfigure your tree."
       continue-on-error: true
-      
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
