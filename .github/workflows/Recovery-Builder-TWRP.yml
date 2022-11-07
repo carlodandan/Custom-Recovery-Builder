@@ -173,7 +173,8 @@ jobs:
         git clone https://github.com/cd-Spidey/Random ./ldcheck
         cd ldcheck/extract-tools
         mv -n qseecomd ${GITHUB_WORKSPACE}/workspace/out/target/product/${{ github.event.inputs.DEVICE_NAME }}/recovery/root/system/bin/
-        mv -n libneeds libcheck ${GITHUB_WORKSPACE}/workspace/out/target/product/${{ github.event.inputs.DEVICE_NAME }}/recovery/root/
+        mv -n libneeds ${GITHUB_WORKSPACE}/workspace/out/target/product/${{ github.event.inputs.DEVICE_NAME }}/recovery/root/
+        mv -n ldcheck ${GITHUB_WORKSPACE}/workspace/out/target/product/${{ github.event.inputs.DEVICE_NAME }}/recovery/root/
         echo "Done moving essentials in checking missing dependencies."
       continue-on-error: true
 
