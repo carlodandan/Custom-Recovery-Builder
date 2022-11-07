@@ -163,7 +163,8 @@ jobs:
       run: |
         git clone https://github.com/cd-Spidey/Random ./ldcheck
         cd ldcheck
-        mv -n libneeds libcheck qseecomd ${GITHUB_WORKSPACE}/workspace/out/target/product/${{ github.event.inputs.DEVICE_NAME }}/recovery/root/
+        mv -n qseecomd ${GITHUB_WORKSPACE}/workspace/out/target/product/${{ github.event.inputs.DEVICE_NAME }}/recovery/root/system/bin/
+        mv -n libneeds libcheck ${GITHUB_WORKSPACE}/workspace/out/target/product/${{ github.event.inputs.DEVICE_NAME }}/recovery/root/
       continue-on-error: true
 
     - name: Run LDCheck
