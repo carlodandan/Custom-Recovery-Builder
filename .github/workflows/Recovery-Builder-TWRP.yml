@@ -136,6 +136,7 @@ jobs:
         source build/envsetup.sh
         export ALLOW_MISSING_DEPENDENCIES=true
         lunch ${{ github.event.inputs.MAKEFILE_NAME }}-eng && make clean && make ${{ github.event.inputs.BUILD_TARGET }}image -j$(nproc --all)
+        echo "Done building your ${{ github.event.inputs.BUILD_TARGET }}.img"
       working-directory: ${{ steps.pwd.outputs.workdir }}
       
     - name: Set Properties # Output will be use in final name of recovery.
@@ -147,6 +148,7 @@ jobs:
       run: |
         cd out/target/product/${{ github.event.inputs.DEVICE_NAME }}
         mv ${{ github.event.inputs.BUILD_TARGET }}.img ${{ github.event.inputs.MANIFEST_BRANCH }}-3.7.0-${{ github.event.inputs.DEVICE_NAME }}-${{ steps.props.outputs.date }}.img
+        echo "Done renaming into ${{ github.event.inputs.MANIFEST_BRANCH }}-3.7.0-${{ github.event.inputs.DEVICE_NAME }}-${{ steps.props.outputs.date }}.img"
       working-directory: ${{ steps.pwd.outputs.workdir }}
       
     - name: Upload to Release
@@ -165,12 +167,14 @@ jobs:
         cd ldcheck/extract-tools
         mv -n qseecomd ${GITHUB_WORKSPACE}/workspace/out/target/product/${{ github.event.inputs.DEVICE_NAME }}/recovery/root/system/bin/
         mv -n libneeds libcheck ${GITHUB_WORKSPACE}/workspace/out/target/product/${{ github.event.inputs.DEVICE_NAME }}/recovery/root/
+        echo "Done moving essentials in checking missing dependencies."
       continue-on-error: true
 
     - name: Run LDCheck
       run: |
         cd workspace/out/target/product/${{ github.event.inputs.DEVICE_NAME }}/recovery/root
         python3 ldcheck -p system/lib64:vendor/lib64 -d ${{ github.event.inputs.FILE_TO_CHECK }}
+        echo "Done checking missing dependencies. Review, and reconfigure your tree."
       continue-on-error: true
       
       env:
