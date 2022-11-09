@@ -157,7 +157,7 @@ jobs:
         artifacts: workspace/out/target/product/${{ github.event.inputs.DEVICE_NAME }}/${{ github.event.inputs.MANIFEST_BRANCH }}*.img
         name: Unofficial TWRP for ${{ github.event.inputs.DEVICE_NAME }} - Build ${{ steps.props.outputs.date }} / ${{ github.run_id }}
         draft: false
-        prerelease: false
+        prerelease: true
         tag: ${{ github.run_id }}-${{ steps.props.outputs.date }}
         token: ${{ secrets.GITHUB_TOKEN }}
         body: |
@@ -166,6 +166,7 @@ jobs:
 
     - name: Link of Release
       run: |
+        echo "Here is your newly-built Custom Recovery."
         echo "https://github.com/${GITHUB_REPOSITORY}/releases/tag/${{ github.run_id }}-${{ steps.props.outputs.date }}"
 
     - name: Clone LDChecker
