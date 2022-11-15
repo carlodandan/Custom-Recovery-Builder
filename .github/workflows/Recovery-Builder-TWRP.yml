@@ -55,7 +55,7 @@ on:
         options:
         - boot
         - recovery
-        - vendor_boot
+        - vendorboot
       FILE_TO_CHECK:
         description: 'Specify which libs to check' # Use it know what kind of dependencies your missing for decryption.
         required: true
