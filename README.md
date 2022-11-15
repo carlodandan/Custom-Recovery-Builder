@@ -11,7 +11,6 @@
   - Device Name: `cannong`
   - Makefile Name: `twrp_cannong`
   - Build Target: `recovery`
-  - File to Check: `system/bin/qseecomd`
 
 - Click Run workflow, and wait 'til done.
 
