@@ -158,8 +158,8 @@ jobs:
     - name: Renaming into TWRP
       run: |
         cd out/target/product/${{ github.event.inputs.DEVICE_NAME }}
-        mv ${{ github.event.inputs.BUILD_TARGET }}.img ${{ github.event.inputs.MANIFEST_BRANCH }}-3.7.0-${{ github.event.inputs.DEVICE_NAME }}-${{ steps.props.outputs.date }}.img
-        echo "Done renaming into ${{ github.event.inputs.MANIFEST_BRANCH }}-3.7.0-${{ github.event.inputs.DEVICE_NAME }}-${{ steps.props.outputs.date }}.img"
+        mv ${{ github.event.inputs.BUILD_TARGET }}.img ${{ github.event.inputs.MANIFEST_BRANCH }}_3.7.0-v000-${{ github.event.inputs.DEVICE_NAME }}-${{ steps.props.outputs.date }}.img
+        echo "Done renaming into ${{ github.event.inputs.MANIFEST_BRANCH }}_3.7.0-v000-${{ github.event.inputs.DEVICE_NAME }}-${{ steps.props.outputs.date }}.img"
       working-directory: ${{ steps.pwd.outputs.workdir }}
       
     - name: Upload to Release
