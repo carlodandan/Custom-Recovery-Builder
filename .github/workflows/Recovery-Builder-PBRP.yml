@@ -160,7 +160,6 @@ jobs:
           Manifest: ${{ github.event.inputs.MANIFEST_URL }} -b ${{ github.event.inputs.MANIFEST_BRANCH }}
           Status: Alpha - Test it Yourself.
 
-
     - name: Link of Release
       run: |
         echo "Here is your newly-built Custom Recovery."
