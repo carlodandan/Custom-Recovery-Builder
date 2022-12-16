@@ -62,7 +62,7 @@ on:
 jobs:
   build:
     if: github.event.repository.owner.id == github.event.sender.id
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
     - name: Check Out
       uses: actions/checkout@v2.5.0
@@ -77,11 +77,10 @@ jobs:
 
     - name: Prepare the Environment
       run: |
-        sudo dpkg --add-architecture i386
         sudo apt update
         sudo apt -y upgrade
         sudo apt -y install gperf gcc-multilib gcc-10-multilib g++-multilib g++-10-multilib libc6-dev lib32ncurses5-dev x11proto-core-dev libx11-dev tree lib32z-dev libgl1-mesa-dev libxml2-utils xsltproc bc ccache lib32readline-dev lib32z1-dev liblz4-tool libncurses5-dev libsdl1.2-dev libwxgtk3.0-gtk3-dev libxml2 lzop pngcrush schedtool squashfs-tools imagemagick libbz2-dev lzma ncftp qemu-user-static libstdc++-10-dev python
-        
+ 
     - name: Install OpenJDK
       run: |
         git clone https://github.com/cd-Spidey/Random.git ./opendjk
@@ -148,15 +147,25 @@ jobs:
       working-directory: ${{ steps.pwd.outputs.workdir }}
       
     - name: Upload to Release
-      uses: softprops/action-gh-release@v1
+      uses: ncipollo/release-action@v1.11.1
       with:
-        files: workspace/out/target/product/${{ github.event.inputs.DEVICE_NAME }}/${{ github.event.inputs.MANIFEST_BRANCH }}*.img
+        artifacts: workspace/out/target/product/${{ github.event.inputs.DEVICE_NAME }}/${{ github.event.inputs.MANIFEST_BRANCH }}*.img
         name: Unofficial PBRP for ${{ github.event.inputs.DEVICE_NAME }} - Build ${{ steps.props.outputs.date }} / ${{ github.run_id }}
-        tag_name: ${{ github.run_id }}-${{ steps.props.outputs.date }}
+        draft: false
+        prerelease: true
+        tag: ${{ github.run_id }}-${{ steps.props.outputs.date }}
+        token: ${{ secrets.GITHUB_TOKEN }}
         body: |
           Device: ${{ github.event.inputs.DEVICE_NAME }}
           Manifest: ${{ github.event.inputs.MANIFEST_URL }} -b ${{ github.event.inputs.MANIFEST_BRANCH }}
-          
+          Status: Alpha - Test it Yourself.
+
+
+    - name: Link of Release
+      run: |
+        echo "Here is your newly-built Custom Recovery."
+        echo "https://github.com/${GITHUB_REPOSITORY}/releases/tag/${{ github.run_id }}-${{ steps.props.outputs.date }}"
+
 # LDCheck works not just in qseecomd, you can target a different file, as long as it is existing in target-out folder.
     - name: Run LDCheck
       run: |
