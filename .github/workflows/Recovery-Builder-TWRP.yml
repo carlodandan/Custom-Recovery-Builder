@@ -166,7 +166,7 @@ jobs:
       uses: ncipollo/release-action@v1.11.1
       with:
         artifacts: workspace/out/target/product/${{ github.event.inputs.DEVICE_NAME }}/${{ github.event.inputs.MANIFEST_BRANCH }}*.img
-        name: Unofficial TWRP for ${{ github.event.inputs.DEVICE_NAME }} - Build ${{ steps.props.outputs.date }} / ${{ github.run_id }}
+        name: Unofficial-Alpha TWRP for ${{ github.event.inputs.DEVICE_NAME }} - Build ${{ steps.props.outputs.date }} / ${{ github.run_id }}
         draft: false
         prerelease: true
         tag: ${{ github.run_id }}-${{ steps.props.outputs.date }}
