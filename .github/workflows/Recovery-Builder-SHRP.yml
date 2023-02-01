@@ -59,6 +59,9 @@ on:
         required: true
         default: 'system/bin/qseecomd' # Mainly for QCOM. but can also work in mtk... I guess.
 
+permissions:
+  contents: write
+
 jobs:
   build:
     if: github.event.repository.owner.id == github.event.sender.id
