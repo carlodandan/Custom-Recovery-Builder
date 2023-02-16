@@ -84,8 +84,8 @@ jobs:
         echo "Makefile Name: ${{ github.event.inputs.MAKEFILE_NAME }}"
         echo "Build Target: ${{ github.event.inputs.BUILD_TARGET }}image"
 
-    - name: Cleanup
-      uses: rokibhasansagar/slimhub_actions@main
+   # - name: Cleanup
+   #   uses: rokibhasansagar/slimhub_actions@main
       
     - name: Set Swap Space
       uses: pierotofy/set-swap-space@master
@@ -94,7 +94,7 @@ jobs:
 
     - name: Prepare the Environment
       run: |
-        sudo apt-get -y install grub-efi
+        sudo apt-get -y install grub-common
         update-grub
         sudo apt-get update
         sudo apt-get -y upgrade
