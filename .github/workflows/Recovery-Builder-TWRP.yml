@@ -84,8 +84,8 @@ jobs:
         echo "Makefile Name: ${{ github.event.inputs.MAKEFILE_NAME }}"
         echo "Build Target: ${{ github.event.inputs.BUILD_TARGET }}image"
 
-   # - name: Cleanup
-  #    uses: rokibhasansagar/slimhub_actions@main
+    - name: Cleanup
+      uses: rokibhasansagar/slimhub_actions@main
       
     - name: Set Swap Space
       uses: pierotofy/set-swap-space@master
