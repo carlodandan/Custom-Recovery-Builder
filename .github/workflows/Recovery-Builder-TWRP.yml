@@ -30,23 +30,23 @@ on:
       DEVICE_TREE:
         description: 'Custom Recovery Tree' # Your already made Device Tree for TWRP
         required: true
-        default: 'https://github.com/cd-Spidey/custom_recovery_tree_xiaomi_cannong'
+        default: 'https://github.com/cd-Crypton/custom_recovery_tree_realme_macedonia'
       DEVICE_TREE_BRANCH:
         description: 'Custom Recovery Tree Branch' # Your Device Tree Branch, make sure it's right.
         required: true
-        default: 'android-12.1'
+        default: 'twrp-12.1'
       DEVICE_PATH:
         description: 'Specify your Device Path' # As is, just like your DEVICE_PATH in your BoardConfig.mk
         required: true
-        default: 'device/xiaomi/cannong'
+        default: 'device/realme/macedonia'
       DEVICE_NAME:
         description: 'Specify your Device Codename' # As is, just like your PRODUCT_DEVICE in your device tree.
         required: true
-        default: 'cannong'
+        default: 'macedonia'
       MAKEFILE_NAME:
         description: 'Specify your Makefile Name' # Look for twrp_ or omni_codename.mk, just remove the .mk
         required: true
-        default: 'twrp_cannong'
+        default: 'twrp_macedonia'
       BUILD_TARGET:
         description: 'Specify your Build Target' # Pick among boot, recovery and vendor_boot
         required: true
@@ -67,7 +67,7 @@ permissions:
 jobs:
   build:
     if: github.event.repository.owner.id == github.event.sender.id
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
     - name: Check Out
       uses: actions/checkout@v2.5.0
@@ -84,17 +84,18 @@ jobs:
         echo "Makefile Name: ${{ github.event.inputs.MAKEFILE_NAME }}"
         echo "Build Target: ${{ github.event.inputs.BUILD_TARGET }}image"
 
-    - name: Cleanup
-      uses: rokibhasansagar/slimhub_actions@main
+ #   - name: Cleanup
+ #     uses: rokibhasansagar/slimhub_actions@main
       
     - name: Set Swap Space
       uses: pierotofy/set-swap-space@master
       with:
         swap-size-gb: 12
 
+#sudo apt remove shim-signed grub-efi-amd64-bin --allow-remove-essential
+
     - name: Prepare the Environment
       run: |
-        sudo apt remove shim-signed grub-efi-amd64-bin --allow-remove-essential
         sudo apt-get update
         sudo apt-get -y upgrade
         sudo apt-get -y install gperf gcc-multilib gcc-10-multilib g++-multilib g++-10-multilib libc6-dev lib32ncurses5-dev x11proto-core-dev libx11-dev tree lib32z-dev libgl1-mesa-dev libxml2-utils xsltproc bc ccache lib32readline-dev lib32z1-dev liblz4-tool libncurses5-dev libsdl1.2-dev libwxgtk3.0-gtk3-dev libxml2 lzop pngcrush schedtool squashfs-tools imagemagick libbz2-dev lzma ncftp qemu-user-static libstdc++-10-dev python
