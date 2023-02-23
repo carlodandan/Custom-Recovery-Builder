@@ -65,7 +65,7 @@ permissions:
 jobs:
   build:
     if: github.event.repository.owner.id == github.event.sender.id
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
     - name: Check Out
       uses: actions/checkout@v2.5.0
@@ -81,9 +81,9 @@ jobs:
     - name: Prepare the Environment
       run: |
         sudo apt remove shim-signed grub-efi-amd64-bin --allow-remove-essential
-        sudo apt update
-        sudo apt -y upgrade
-        sudo apt -y install gperf gcc-multilib gcc-10-multilib g++-multilib g++-10-multilib libc6-dev lib32ncurses5-dev x11proto-core-dev libx11-dev tree lib32z-dev libgl1-mesa-dev libxml2-utils xsltproc bc ccache lib32readline-dev lib32z1-dev liblz4-tool libncurses5-dev libsdl1.2-dev libwxgtk3.0-gtk3-dev libxml2 lzop pngcrush schedtool squashfs-tools imagemagick libbz2-dev lzma ncftp qemu-user-static libstdc++-10-dev python
+        sudo apt-get update
+        sudo apt-get -y upgrade
+        sudo apt-get -y install gperf gcc-multilib gcc-10-multilib g++-multilib g++-10-multilib libc6-dev lib32ncurses5-dev x11proto-core-dev libx11-dev tree lib32z-dev libgl1-mesa-dev libxml2-utils xsltproc bc ccache lib32readline-dev lib32z1-dev liblz4-tool libncurses5-dev libsdl1.2-dev libwxgtk3.0-gtk3-dev libxml2 lzop pngcrush schedtool squashfs-tools imagemagick libbz2-dev lzma ncftp qemu-user-static libstdc++-10-dev 2to3 python2-minimal python2 dh-python python-is-python3
  
     - name: Install OpenJDK
       run: |
@@ -93,7 +93,7 @@ jobs:
     - name: Install Git-Repo
       run: |
         git config --global advice.detachedHead false
-        git clone https://android.googlesource.com/tools/repo -b v2.29 ~/bin
+        git clone https://android.googlesource.com/tools/repo -b v2.30 ~/bin
         chmod a+x ~/bin/repo
         sudo ln -sf ~/bin/repo /usr/bin/repo
 
