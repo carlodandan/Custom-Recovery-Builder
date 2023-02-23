@@ -65,7 +65,7 @@ permissions:
 jobs:
   build:
     if: github.event.repository.owner.id == github.event.sender.id
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
     - name: Check Out
       uses: actions/checkout@v2.5.0
@@ -105,7 +105,7 @@ jobs:
     - name: Install Git-Repo
       run: |
         git config --global advice.detachedHead false
-        git clone https://android.googlesource.com/tools/repo -b v2.29 ~/bin
+        git clone https://android.googlesource.com/tools/repo -b v2.30 ~/bin
         chmod a+x ~/bin/repo
         sudo ln -sf ~/bin/repo /usr/bin/repo
 
