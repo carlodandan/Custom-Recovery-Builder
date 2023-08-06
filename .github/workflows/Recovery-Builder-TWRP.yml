@@ -1,25 +1,10 @@
 name: Recovery Builder - TWRP
 
-# Credits to:
-# https://github.com/that1 for ldcheck and libneeds script
-# https://github.com/TeamWin for QCom' Decryption Guide 
-# https://github.com/minimal-manifest-twrp for TWRP Manifest
-# https://github.com/azwhikaru for Recovery Builder Template
-# And all Contributors in every repositories I used
-
 on:
   workflow_dispatch:
     inputs:
-      MANIFEST_URL:
-        description: 'Manifest'
-        required: true
-        default: ''
-        type: choice
-        options:
-        - https://github.com/minimal-manifest-twrp/platform_manifest_twrp_aosp.git
-        - https://github.com/minimal-manifest-twrp/platform_manifest_twrp_omni.git
       MANIFEST_BRANCH:
-        description: 'Manifest Branch'
+        description: 'TWRP Minimal-Manifest Branch'
         required: true
         default: ''
         type: choice
@@ -56,18 +41,27 @@ on:
         - boot
         - recovery
         - vendorboot
-      FILE_TO_CHECK:
-        description: 'Specify which libs to check' # Use it know what kind of dependencies your missing for decryption.
+      LDCHECK:
+        description: 'True or False' # Use it know what kind of dependencies your missing for decryption blobs.
         required: true
-        default: 'system/bin/qseecomd' # Mainly for QCOM. but can also work in mtk... I guess.
+        default: 'false'
+        type: choice
+        options:
+        - true
+        - false
 
 permissions:
   contents: write
 
 jobs:
   build:
-    if: github.event.repository.owner.id == github.event.sender.id
+    name: Build TWRP by ${{ github.actor }}
     runs-on: ubuntu-20.04
+    if: github.event.repository.owner.id == github.event.sender.id
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    permissions:
+      contents: write
     steps:
     - name: Check Out
       uses: actions/checkout@v2.5.0
@@ -75,7 +69,6 @@ jobs:
     - name: Display Inputs
       run: |
         echo "Displaying variables/inputs."
-        echo "Manifest URL: ${{ github.event.inputs.MANIFEST_URL }}"
         echo "Manifest Branch: ${{ github.event.inputs.MANIFEST_BRANCH }}"
         echo "Device Tree: ${{ github.event.inputs.DEVICE_TREE }}"
         echo "Device Branch: ${{ github.event.inputs.DEVICE_TREE_BRANCH }}"
@@ -91,45 +84,51 @@ jobs:
       uses: pierotofy/set-swap-space@master
       with:
         swap-size-gb: 12
-
-    - name: Prepare the Environment
+        
+    - name: Prepare the environment
       run: |
-        sudo apt remove shim-signed grub-efi-amd64-bin --allow-remove-essential
         sudo apt-get update
         sudo apt-get -y upgrade
-        sudo apt-get -y install gperf gcc-multilib gcc-10-multilib g++-multilib g++-10-multilib libc6-dev lib32ncurses5-dev x11proto-core-dev libx11-dev tree lib32z-dev libgl1-mesa-dev libxml2-utils xsltproc bc ccache lib32readline-dev lib32z1-dev liblz4-tool libncurses5-dev libsdl1.2-dev libwxgtk3.0-gtk3-dev libxml2 lzop pngcrush schedtool squashfs-tools imagemagick libbz2-dev lzma ncftp qemu-user-static libstdc++-10-dev 2to3 python2-minimal python2 dh-python python-is-python3
+        sudo apt-get -y install gperf gcc-multilib gcc-10-multilib g++-multilib g++-10-multilib libc6-dev lib32ncurses5-dev x11proto-core-dev libx11-dev tree lib32z-dev libgl1-mesa-dev libxml2-utils xsltproc bc ccache lib32readline-dev lib32z1-dev liblz4-tool libncurses5-dev libncurses5 libtinfo5 libsdl1.2-dev libwxgtk3.0-gtk3-dev libxml2 lzop pngcrush schedtool squashfs-tools imagemagick libbz2-dev lzma ncftp qemu-user-static libstdc++-10-dev python
 
     - name: Install OpenJDK
+      uses: actions/setup-java@v3
+      with:
+        distribution: 'zulu'
+        java-version: '8'
+
+     - name: Install Git-Repo
       run: |
-        git clone https://github.com/cd-Spidey/Random.git ./opendjk
-        sudo bash opendjk/setup/packages/open_jdk.sh
-        
-    - name: Install Git-Repo
-      run: |
-        git config --global advice.detachedHead false
-        git clone https://android.googlesource.com/tools/repo -b v2.30 ~/bin
+        mkdir ~/bin
+        curl https://storage.googleapis.com/git-repo-downloads/repo > ~/bin/repo
         chmod a+x ~/bin/repo
         sudo ln -sf ~/bin/repo /usr/bin/repo
 
+    - name: Check Manifest Branch
+      uses: haya14busa/action-cond@v1
+      id: manifest
+      with:
+        cond: ${{ github.event.inputs.MANIFEST_BRANCH == 'twrp-11' || github.event.inputs.MANIFEST_BRANCH == 'twrp-12.1' }}
+        if_true: https://github.com/minimal-manifest-twrp/platform_manifest_twrp_aosp.git
+        if_false: https://github.com/minimal-manifest-twrp/platform_manifest_twrp_omni.git
+
     - name: Initialize Repo
       run: |
-        mkdir workspace
-        cd workspace
-        echo "workdir=$(pwd)" >> $GITHUB_OUTPUT
+        mkdir android-recovery
+        cd android-recovery
         git config --global user.name "Carlo Dandan"
         git config --global user.email "jasminecarlo01@gmail.com"
-        repo init --depth=1 -u ${{ github.event.inputs.MANIFEST_URL }} -b ${{ github.event.inputs.MANIFEST_BRANCH }}
-      id: pwd
-        
+        repo init --depth=1 -u ${{ steps.manifest.outputs.value }} -b ${{ github.event.inputs.MANIFEST_BRANCH }}
+  
     - name: Repo Sync
       run: |
+        cd android-recovery
         repo sync -j$(nproc --all) --force-sync
-      working-directory: workspace
       
     - name: Clone Device Tree
       run: |
+        cd android-recovery
         git clone ${{ github.event.inputs.DEVICE_TREE }} -b ${{ github.event.inputs.DEVICE_TREE_BRANCH }} ./${{ github.event.inputs.DEVICE_PATH }}
-      working-directory: ${{ steps.pwd.outputs.workdir }}
 
     - name: Check Build Tree
       uses: haya14busa/action-cond@v1
@@ -141,9 +140,9 @@ jobs:
 
     - name: Sync Dependencies
       run: |
+        cd android-recovery
         bash ${GITHUB_WORKSPACE}/scripts/convert.sh ${{ github.event.inputs.DEVICE_PATH }}/${{ steps.buildtree.outputs.value }}.dependencies
         repo sync -j$(nproc --all)
-      working-directory: ${{ steps.pwd.outputs.workdir }}
       continue-on-error: true
 
     - name: Building Recovery
@@ -152,52 +151,54 @@ jobs:
         export ALLOW_MISSING_DEPENDENCIES=true
         lunch ${{ github.event.inputs.MAKEFILE_NAME }}-eng && make clean && make ${{ github.event.inputs.BUILD_TARGET }}image -j$(nproc --all)
         echo "Done building your ${{ github.event.inputs.BUILD_TARGET }}.img"
-      working-directory: ${{ steps.pwd.outputs.workdir }}
       
-    - name: Set Properties # Output will be use in final name of recovery.
-      id: props
+    - name: Renaming Recovery # Output will be use in final name of recovery.
       run: |
-        echo "date=$(date +%Y%m%d)" >> $GITHUB_OUTPUT
-      
-    - name: Renaming into TWRP
-      run: |
-        cd out/target/product/${{ github.event.inputs.DEVICE_NAME }}
-        mv ${{ github.event.inputs.BUILD_TARGET }}.img ${{ github.event.inputs.MANIFEST_BRANCH }}_3.7.0-v000-${{ github.event.inputs.DEVICE_NAME }}-${{ steps.props.outputs.date }}.img
-        echo "Done renaming into ${{ github.event.inputs.MANIFEST_BRANCH }}_3.7.0-v000-${{ github.event.inputs.DEVICE_NAME }}-${{ steps.props.outputs.date }}.img"
-      working-directory: ${{ steps.pwd.outputs.workdir }}
+        echo "BUILD_DATE=$(date +%Y%m%d)" >> $GITHUB_ENV
+        cd android-recovery/out/target/product/${{ github.event.inputs.DEVICE_NAME }}
+        mv ${{ github.event.inputs.BUILD_TARGET }}.img ${{ github.event.inputs.MANIFEST_BRANCH }}-${{ github.event.inputs.DEVICE_NAME }}-${{ env.BUILD_DATE }}.img
+        echo "Done renaming into ${{ github.event.inputs.MANIFEST_BRANCH }}-${{ github.event.inputs.DEVICE_NAME }}-${{ env.BUILD_DATE }}.img"
       
     - name: Upload to Release
-      uses: ncipollo/release-action@v1.11.1
+      uses: softprops/action-gh-release@v1
       with:
-        artifacts: workspace/out/target/product/${{ github.event.inputs.DEVICE_NAME }}/${{ github.event.inputs.MANIFEST_BRANCH }}*.img
-        name: Unofficial-Alpha TWRP for ${{ github.event.inputs.DEVICE_NAME }} - Build ${{ steps.props.outputs.date }} / ${{ github.run_id }}
-        draft: false
-        prerelease: true
-        tag: ${{ github.run_id }}-${{ steps.props.outputs.date }}
-        token: ${{ secrets.GITHUB_TOKEN }}
+        files: |
+          android-recovery/out/target/product/${{ github.event.inputs.DEVICE_NAME }}/${{ github.event.inputs.MANIFEST_BRANCH }}*.img
+        name: Unofficial TWRP for ${{ github.event.inputs.DEVICE_NAME }} // ${{ env.BUILD_DATE }}
+        tag_name: ${{ github.run_id }}
         body: |
-          Device: ${{ github.event.inputs.DEVICE_NAME }}
-          Manifest: ${{ github.event.inputs.MANIFEST_URL }} -b ${{ github.event.inputs.MANIFEST_BRANCH }}
-          Status: Alpha - Test it Yourself.
+          Build: ${{ github.event.inputs.MANIFEST_BRANCH }}
+          Device: ${{ github.event.inputs.DEVICE_TREE }}/tree/${{ github.event.inputs.DEVICE_TREE_BRANCH }}
 
-    - name: Link of Release
+    - name: Detect Necessary file fr decryption
+      if: github.event.inputs.LDCHECK == 'true'
       run: |
-        echo "Here is your newly-built Custom Recovery."
-        echo "https://github.com/${GITHUB_REPOSITORY}/releases/tag/${{ github.run_id }}-${{ steps.props.outputs.date }}"
-
-    - name: Clone LDChecker
-      run: |
-        git clone https://github.com/cd-Spidey/Random ./ldcheck
-        cd ldcheck/extract-tools
-        mv -n qseecomd ${GITHUB_WORKSPACE}/workspace/out/target/product/${{ github.event.inputs.DEVICE_NAME }}/recovery/root/system/bin/
-        mv -n libneeds ${GITHUB_WORKSPACE}/workspace/out/target/product/${{ github.event.inputs.DEVICE_NAME }}/recovery/root/
-        mv -n ldcheck ${GITHUB_WORKSPACE}/workspace/out/target/product/${{ github.event.inputs.DEVICE_NAME }}/recovery/root/
-        echo "Done moving essentials in checking missing dependencies."
+        cd android-recovery
+        if [ -f ${{ github.event.inputs.DEVICE_PATH }}/recovery/root/system/bin/qseecomd ]; then
+            echo "FILE_TO_CHECK=system/bin/qseecomd" >> $GITHUB_ENV
+        fi
+        if [ -f ${{ github.event.inputs.DEVICE_PATH }}/recovery/root/system/bin/mcDriverDaemon ]; then
+            echo "FILE_TO_CHECK=system/bin/mcDriverDaemon" >> $GITHUB_ENV
+        fi
+        if [ -f ${{ github.event.inputs.DEVICE_PATH }}/recovery/root/system/bin/teei_daemon ]; then
+            echo "FILE_TO_CHECK=system/bin/teei_daemon" >> $GITHUB_ENV
+        fi
+        if [ -f ${{ github.event.inputs.DEVICE_PATH }}/recovery/root/vendor/bin/teei_daemon ]; then
+            echo "FILE_TO_CHECK=vendor/bin/teei_daemon" >> $GITHUB_ENV
+        fi
+        if [ -f ${{ github.event.inputs.DEVICE_PATH }}/recovery/root/system/bin/mcDriverDaemon ]; then
+            echo "FILE_TO_CHECK=vendor/bin/mcDriverDaemon" >> $GITHUB_ENV
+        fi
+        echo "File to check is ${{ env.FILE_TO_CHECK }}."
       continue-on-error: true
 
     - name: Run LDCheck
+      if: github.event.inputs.LDCHECK == 'true'
       run: |
-        cd workspace/out/target/product/${{ github.event.inputs.DEVICE_NAME }}/recovery/root
-        python3 ldcheck -p system/lib64:vendor/lib64:system/lib:vendor/lib -d ${{ github.event.inputs.FILE_TO_CHECK }}
+        cd tools
+        mv -n libneeds ${GITHUB_WORKSPACE}/workspace/out/target/product/${{ github.event.inputs.DEVICE_NAME }}/recovery/root/
+        mv -n ldcheck ${GITHUB_WORKSPACE}/workspace/out/target/product/${{ github.event.inputs.DEVICE_NAME }}/recovery/root/
+        cd ../android-recovery/out/target/product/${{ github.event.inputs.DEVICE_NAME }}/recovery/root
+        python3 ldcheck -p system/lib64:vendor/lib64:system/lib:vendor/lib -d ${{ env.FILE_TO_CHECK }}
         echo "Done checking missing dependencies. Review, and reconfigure your tree."
       continue-on-error: true
