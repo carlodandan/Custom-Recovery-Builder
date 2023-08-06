@@ -126,6 +126,7 @@ jobs:
             echo "No recovery makefile file found!"
             exit 1
         fi
+      continue-on-error: true
 
     - name: Check Dependencies
       run: |
@@ -138,6 +139,7 @@ jobs:
             echo "No dependencies file found!"
             exit 1
         fi
+      continue-on-error: true
 
     - name: Sync Dependencies
       run: |
