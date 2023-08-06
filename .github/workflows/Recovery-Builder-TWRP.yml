@@ -167,7 +167,7 @@ jobs:
           Build: ${{ github.event.inputs.MANIFEST_BRANCH }}
           Device: ${{ github.event.inputs.DEVICE_TREE }}/tree/${{ github.event.inputs.DEVICE_TREE_BRANCH }}
 
-    - name: Detect Necessary file fr decryption
+    - name: Detect File (Only if LDCHECK was set to check.)
       if: github.event.inputs.LDCHECK == 'yes'
       run: |
         cd android-recovery
@@ -198,7 +198,7 @@ jobs:
         echo "File to check is ${{ env.FILE_TO_CHECK }}."
       continue-on-error: true
 
-    - name: Run LDCheck
+    - name: Run LDCheck (Only if LDCHECK was set to check.)
       if: github.event.inputs.LDCHECK == 'yes'
       run: |
         cd tools
