@@ -173,18 +173,27 @@ jobs:
         cd android-recovery
         if [ -f ${{ github.event.inputs.DEVICE_PATH }}/recovery/root/system/bin/qseecomd ]; then
             echo "FILE_TO_CHECK=system/bin/qseecomd" >> $GITHUB_ENV
-        else
+        elif [ -f ${{ github.event.inputs.DEVICE_PATH }}/recovery/root/vendor/bin/qseecomd ]; then
             echo "FILE_TO_CHECK=vendor/bin/qseecomd" >> $GITHUB_ENV
+        else
+            echo "No qseecomd file found!"
+            exit 1
         fi
         if [ -f ${{ github.event.inputs.DEVICE_PATH }}/recovery/root/system/bin/mcDriverDaemon ]; then
             echo "FILE_TO_CHECK=system/bin/mcDriverDaemon" >> $GITHUB_ENV
-        else
+        elif [ -f ${{ github.event.inputs.DEVICE_PATH }}/recovery/root/vendor/bin/mcDriverDaemon ]; then
             echo "FILE_TO_CHECK=vendor/bin/mcDriverDaemon" >> $GITHUB_ENV
+        else
+            echo "No mcDriverDaemon file found!"
+            exit 1
         fi
         if [ -f ${{ github.event.inputs.DEVICE_PATH }}/recovery/root/system/bin/teei_daemon ]; then
             echo "FILE_TO_CHECK=system/bin/teei_daemon" >> $GITHUB_ENV
-        else
+        elif [ -f ${{ github.event.inputs.DEVICE_PATH }}/recovery/root/vendor/bin/teei_daemon ]; then
             echo "FILE_TO_CHECK=vendor/bin/teei_daemon" >> $GITHUB_ENV
+        else
+            echo "No teei_daemon file found!"
+            exit 1
         fi
         echo "File to check is ${{ env.FILE_TO_CHECK }}."
       continue-on-error: true
