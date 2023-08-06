@@ -12,6 +12,7 @@ Compile your first custom recovery via Github Actions - with ldcheck setup. This
  * Device Path (device/brand/codename)
  * Build Target (boot, reecovery, vendorboot)
  * LDCHECK (Yes or No)
+   - LDCHECK is for checking file or binary dependencies with other files, to detect whether your tree has missing files, especially for decryption problem. This workflow were set to target qseecomd (for QCom) and teei_daemon/mcDriverDaemon (for MTK). You have to manually change ldcheck setup in yml config to target other files. 
 
 - If you are building manually/locally and you want to use ldcheck for checking dependencies, visit [THIS](https://github.com/TeamWin/android_device_qcom_twrp-common/tree/android-11#using-ldcheck-to-find-dependencies) this for guide.
 
