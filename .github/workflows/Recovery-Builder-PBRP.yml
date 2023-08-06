@@ -39,13 +39,13 @@ on:
         - recovery
         - vendorboot
       LDCHECK:
-        description: 'Yes or No' # Use it know what kind of dependencies your missing for decryption blobs.
+        description: 'Check or Ignore' # Use it know what kind of dependencies your missing for decryption blobs.
         required: true
-        default: 'no'
+        default: 'ignore'
         type: choice
         options:
-        - yes
-        - no
+        - check
+        - ignore
 
 jobs:
   build:
@@ -172,8 +172,8 @@ jobs:
           Build: ${{ github.event.inputs.MANIFEST_BRANCH }}
           Device: ${{ github.event.inputs.DEVICE_TREE }}/tree/${{ github.event.inputs.DEVICE_TREE_BRANCH }}
 
-    - name: Detect Necessary file fr decryption
-      if: github.event.inputs.LDCHECK == 'yes'
+    - name: Detect File (Only if LDCHECK was set to check.)
+      if: github.event.inputs.LDCHECK == 'check'
       run: |
         cd android-recovery
         if [ -f ${{ github.event.inputs.DEVICE_PATH }}/recovery/root/system/bin/qseecomd ]; then
@@ -203,8 +203,8 @@ jobs:
         echo "File to check is ${{ env.FILE_TO_CHECK }}."
       continue-on-error: true
 
-    - name: Run LDCheck
-      if: github.event.inputs.LDCHECK == 'yes'
+    - name: Run LDCheck (Only if LDCHECK was set to check.)
+      if: github.event.inputs.LDCHECK == 'check'
       run: |
         cd tools
         mv -n libneeds ${GITHUB_WORKSPACE}/workspace/out/target/product/${{ github.event.inputs.DEVICE_NAME }}/recovery/root/
