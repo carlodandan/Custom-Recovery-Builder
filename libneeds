@@ -1,3 +1,0 @@
-#!/bin/sh
-# list needed shared libs for Android lib
-readelf -d $1 |grep '\(NEEDED\)' | sed -r 's/.*\[(.*)\]/\1/'
