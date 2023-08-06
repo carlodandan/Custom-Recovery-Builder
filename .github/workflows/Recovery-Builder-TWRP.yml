@@ -137,7 +137,6 @@ jobs:
 
     - name: Sync Dependencies
       run: |
-        cd android-recovery
         bash ${GITHUB_WORKSPACE}/scripts/convert.sh ${{ github.event.inputs.DEVICE_PATH }}/${{ steps.buildtree.outputs.value }}.dependencies
         repo sync -j$(nproc --all)
       continue-on-error: true
@@ -174,18 +173,18 @@ jobs:
         cd android-recovery
         if [ -f ${{ github.event.inputs.DEVICE_PATH }}/recovery/root/system/bin/qseecomd ]; then
             echo "FILE_TO_CHECK=system/bin/qseecomd" >> $GITHUB_ENV
+        else
+            echo "FILE_TO_CHECK=vendor/bin/qseecomd" >> $GITHUB_ENV
         fi
         if [ -f ${{ github.event.inputs.DEVICE_PATH }}/recovery/root/system/bin/mcDriverDaemon ]; then
             echo "FILE_TO_CHECK=system/bin/mcDriverDaemon" >> $GITHUB_ENV
+        else
+            echo "FILE_TO_CHECK=vendor/bin/mcDriverDaemon" >> $GITHUB_ENV
         fi
         if [ -f ${{ github.event.inputs.DEVICE_PATH }}/recovery/root/system/bin/teei_daemon ]; then
             echo "FILE_TO_CHECK=system/bin/teei_daemon" >> $GITHUB_ENV
-        fi
-        if [ -f ${{ github.event.inputs.DEVICE_PATH }}/recovery/root/vendor/bin/teei_daemon ]; then
+        else
             echo "FILE_TO_CHECK=vendor/bin/teei_daemon" >> $GITHUB_ENV
-        fi
-        if [ -f ${{ github.event.inputs.DEVICE_PATH }}/recovery/root/system/bin/mcDriverDaemon ]; then
-            echo "FILE_TO_CHECK=vendor/bin/mcDriverDaemon" >> $GITHUB_ENV
         fi
         echo "File to check is ${{ env.FILE_TO_CHECK }}."
       continue-on-error: true
