@@ -154,23 +154,36 @@ jobs:
         repo sync -j$(nproc --all)
       continue-on-error: true
 
-    - name: Building Image
+    - name: Building Image 
       run: |
         cd android-recovery
         source build/envsetup.sh
         export ALLOW_MISSING_DEPENDENCIES=true
-        lunch ${{ env.DEVICE_MAKEFILE }}-eng && make clean && make ${{ github.event.inputs.BUILD_TARGET }}image -j$(nproc --all)
+        lunch ${{ env.MAKEFILE }}-eng && make clean && make ${{ github.event.inputs.BUILD_TARGET }}image -j$(nproc --all)
         echo "Done building your ${{ github.event.inputs.BUILD_TARGET }}.img"
       
     - name: Set Build Date # Output will be use in Release
       run: |
         echo "BUILD_DATE=$(date +%Y%m%d)" >> $GITHUB_ENV
       
-    - name: Upload to Release
+    - name: Upload to Release (boot and becovery)
+      if: github.event.inputs.BUILD_TARGET == 'boot' || github.event.inputs.BUILD_TARGET == 'recovery'
       uses: softprops/action-gh-release@v1
       with:
         files: |
-          android-recovery/out/target/product/${{ github.event.inputs.DEVICE_NAME }}/*.img
+          android-recovery/out/target/product/${{ github.event.inputs.DEVICE_NAME }}/${{ github.event.inputs.BUILD_TARGET }}.img
+        name: Unofficial TWRP for ${{ github.event.inputs.DEVICE_NAME }} // ${{ env.BUILD_DATE }}
+        tag_name: ${{ github.run_id }}
+        body: |
+          Build: ${{ github.event.inputs.MANIFEST_BRANCH }}
+          Device: ${{ github.event.inputs.DEVICE_TREE }}/tree/${{ github.event.inputs.DEVICE_TREE_BRANCH }}
+
+    - name: Upload to Release (if vendor_boot)
+      if: github.event.inputs.BUILD_TARGET == 'vendorboot'
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          android-recovery/out/target/product/${{ github.event.inputs.DEVICE_NAME }}/vendor_boot.img
         name: Unofficial TWRP for ${{ github.event.inputs.DEVICE_NAME }} // ${{ env.BUILD_DATE }}
         tag_name: ${{ github.run_id }}
         body: |
@@ -205,15 +218,14 @@ jobs:
             echo "No teei_daemon file found!"
             exit 1
         fi
-        echo "File to check is ${{ env.FILE_TO_CHECK }}."
       continue-on-error: true
 
     - name: Run LDCheck (Only if LDCHECK was set to check.)
       if: github.event.inputs.LDCHECK == 'check'
       run: |
         cd tools
-        mv -n libneeds ${GITHUB_WORKSPACE}/workspace/out/target/product/${{ github.event.inputs.DEVICE_NAME }}/recovery/root/
-        mv -n ldcheck ${GITHUB_WORKSPACE}/workspace/out/target/product/${{ github.event.inputs.DEVICE_NAME }}/recovery/root/
+        mv -n libneeds ${GITHUB_WORKSPACE}/android-recovery/out/target/product/${{ github.event.inputs.DEVICE_NAME }}/recovery/root/
+        mv -n ldcheck ${GITHUB_WORKSPACE}/android-recovery/out/target/product/${{ github.event.inputs.DEVICE_NAME }}/recovery/root/
         cd ../android-recovery/out/target/product/${{ github.event.inputs.DEVICE_NAME }}/recovery/root
         python3 ldcheck -p system/lib64:vendor/lib64:system/lib:vendor/lib -d ${{ env.FILE_TO_CHECK }}
         echo "Done checking missing dependencies. Review, and reconfigure your tree."
