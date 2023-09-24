@@ -172,7 +172,8 @@ jobs:
         tag_name: ${{ github.run_id }}
         body: |
           Build: ${{ github.event.inputs.MANIFEST_BRANCH }}
-          Device: ${{ github.event.inputs.DEVICE_TREE }}/tree/${{ github.event.inputs.DEVICE_TREE_BRANCH }}
+          Device: [Device Tree/Branch](${{ github.event.inputs.DEVICE_TREE }}/tree/${{ github.event.inputs.DEVICE_TREE_BRANCH }})
+          Commit: Most recent [commit](${{ github.event.inputs.DEVICE_TREE }}/commit/${{ env.COMMIT_ID }}) during building.
 
     - name: Upload to Release (if vendor_boot)
       if: github.event.inputs.BUILD_TARGET == 'vendorboot'
