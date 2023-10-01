@@ -132,24 +132,6 @@ jobs:
         fi
       continue-on-error: true
 
-    - name: Check Dependencies
-      run: |
-        cd android-recovery
-        if [ -f ${{ github.event.inputs.DEVICE_PATH }}/twrp.dependencies ]; then
-            echo "DEPENDENCIES=twrp.dependencies" >> $GITHUB_ENV
-        elif [ -f ${{ github.event.inputs.DEVICE_PATH }}/omni.dependencies ]; then
-            echo "DEPENDENCIES=omni.dependencies" >> $GITHUB_ENV
-        else
-            echo "No dependencies file found!"
-        fi
-      continue-on-error: true
-
-    - name: Sync Dependencies
-      run: |
-        bash ${GITHUB_WORKSPACE}/scripts/convert.sh ${{ github.event.inputs.DEVICE_PATH }}/${{ env.DEPENDENCIES }}
-        repo sync -j$(nproc --all)
-      continue-on-error: true
-
     - name: Building Image 
       run: |
         cd android-recovery
