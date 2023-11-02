@@ -135,7 +135,7 @@ jobs:
       continue-on-error: true
       
     - name: Install Python 2
-      if: github.event.inputs.MANIFEST_BRANCH != 'twrp-11' || github.event.inputs.MANIFEST_BRANCH != 'twrp-12.1'
+      if: github.event.inputs.MANIFEST_BRANCH != 'twrp-11' && github.event.inputs.MANIFEST_BRANCH != 'twrp-12.1'
       run: |
         sudo apt -y install python2
         cd /usr/bin

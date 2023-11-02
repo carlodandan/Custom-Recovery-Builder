@@ -127,7 +127,7 @@ jobs:
       continue-on-error: true
 
     - name: Install Python 2
-      if: github.event.inputs.MANIFEST_BRANCH != 'android-11.0' || github.event.inputs.MANIFEST_BRANCH != 'android-12.1'
+      if: github.event.inputs.MANIFEST_BRANCH != 'android-11.0' && github.event.inputs.MANIFEST_BRANCH != 'android-12.1'
       run: |
         sudo apt -y install python2
         cd /usr/bin
