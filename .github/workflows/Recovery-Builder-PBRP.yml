@@ -11,7 +11,6 @@ on:
         options:
         - android-12.1
         - android-11.0
-        - android-10.0
         - android-9.0
       DEVICE_TREE:
         description: 'Custom Recovery Tree' # Your already made Device Tree for TWRP
@@ -76,9 +75,11 @@ jobs:
 
     - name: Prepare the environment
       run: |
-        sudo apt-get update
-        sudo apt-get -y upgrade
-        sudo apt-get -y install gperf gcc-multilib gcc-10-multilib g++-multilib g++-10-multilib libc6-dev lib32ncurses5-dev x11proto-core-dev libx11-dev tree lib32z-dev libgl1-mesa-dev libxml2-utils xsltproc bc ccache lib32readline-dev lib32z1-dev liblz4-tool libncurses5-dev libncurses5 libtinfo5 libsdl1.2-dev libwxgtk3.0-gtk3-dev libxml2 lzop pngcrush schedtool squashfs-tools imagemagick libbz2-dev lzma ncftp qemu-user-static libstdc++-10-dev python
+        sudo apt update
+        sudo apt -y upgrade
+        sudo apt -y install gperf gcc-multilib gcc-10-multilib g++-multilib g++-10-multilib libc6-dev lib32ncurses5-dev x11proto-core-dev libx11-dev tree lib32z-dev libgl1-mesa-dev libxml2-utils xsltproc bc ccache lib32readline-dev lib32z1-dev liblz4-tool libncurses5-dev libsdl1.2-dev libwxgtk3.0-gtk3-dev libxml2 lzop pngcrush schedtool squashfs-tools imagemagick libbz2-dev lzma ncftp qemu-user-static libstdc++-10-dev libtinfo5 libgflags-dev
+        sudo add-apt-repository universe
+        sudo apt -y install libncurses5
 
     - name: Install OpenJDK
       uses: actions/setup-java@v3
@@ -124,6 +125,13 @@ jobs:
             echo "No recovery makefile file found!"
         fi
       continue-on-error: true
+
+    - name: Install Python 2
+      if: github.event.inputs.MANIFEST_BRANCH != 'android-11.0' && github.event.inputs.MANIFEST_BRANCH != 'android-12.1'
+      run: |
+        sudo apt -y install python2
+        cd /usr/bin
+        sudo ln -sf python2 python
 
     - name: Building Image
       run: |
