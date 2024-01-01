@@ -42,7 +42,7 @@ on:
         required: true
         default: 'system/bin/qseecomd'
 
-jobs
+jobs:
   build:
     name: Build TWRP by ${{ github.actor }}
     runs-on: ubuntu-20.04
