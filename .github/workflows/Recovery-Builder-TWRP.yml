@@ -31,7 +31,7 @@ on:
       BUILD_TARGET:
         description: 'Specify your Build Target' # Pick among boot, recovery and vendor_boot
         required: true
-        default: 'recovery'
+        default: 'recovery.img'
         type: choice
         options:
         - boot
