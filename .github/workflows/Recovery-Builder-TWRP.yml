@@ -109,7 +109,8 @@ jobs:
         git config --global user.name "Carlo Dandan"
         git config --global user.email "jasminecarlo01@gmail.com"
         repo init --depth=1 -u ${{ steps.manifest.outputs.value }} -b ${{ github.event.inputs.MANIFEST_BRANCH }}
-  
+        sed -i '/<remove-project name="platform\/external\/gflags"  \/>/d' .repo/manifests/remove-minimal.xml
+        
     - name: Repo Sync
       run: |
         cd android-recovery
