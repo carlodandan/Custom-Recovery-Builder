@@ -13,23 +13,23 @@ on:
         - twrp-11
         - twrp-9.0
       DEVICE_TREE:
-        description: 'Custom Recovery Tree' # Your already made Device Tree for TWRP
+        description: 'https://github.com/twrpdtgen/android_device_infinix_Infinix-X6823C' # Your already made Device Tree for TWRP
         required: true
         default: 'https://github.com/cd-Crypton/custom_recovery_tree_realme_macedonia'
       DEVICE_TREE_BRANCH:
-        description: 'Custom Recovery Tree Branch' # Your Device Tree Branch, make sure it's right.
+        description: 'twrp-12.1' # Your Device Tree Branch, make sure it's right.
         required: true
         default: 'twrp-12.1'
       DEVICE_PATH:
-        description: 'Specify your Device Path' # As is, just like your DEVICE_PATH in your BoardConfig.mk
+        description: 'device/infinix/Infinix-X6823C' # As is, just like your DEVICE_PATH in your BoardConfig.mk
         required: true
         default: 'device/realme/macedonia'
       DEVICE_NAME:
-        description: 'Specify your Device Codename' # As is, just like your PRODUCT_DEVICE in your device tree.
+        description: 'Infinix-X6823C' # As is, just like your PRODUCT_DEVICE in your device tree.
         required: true
         default: 'macedonia'
       BUILD_TARGET:
-        description: 'Specify your Build Target' # Pick among boot, recovery and vendor_boot
+        description: 'boot' # Pick among boot, recovery and vendor_boot
         required: true
         default: 'recovery'
         type: choice
@@ -38,7 +38,7 @@ on:
         - recovery
         - vendorboot
       LDCHECK:
-        description: 'Path of blobs to check' # Use it know what kind of dependencies your missing for decryption blobs.
+        description: 'system/bin/qseecomd' # Use it know what kind of dependencies your missing for decryption blobs.
         required: true
         default: 'system/bin/qseecomd'
 
