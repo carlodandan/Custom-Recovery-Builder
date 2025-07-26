@@ -157,7 +157,7 @@ jobs:
         if [ "${{ inputs.BUILD_TARGET }}" = "boot" ] || [ "${{ inputs.BUILD_TARGET }}" = "recovery" ]; then
           echo "Compressing ${{ inputs.BUILD_TARGET }}.img"
           tar -cvf ${{ inputs.BUILD_TARGET }}.tar ${{ inputs.BUILD_TARGET }}.img
-        elif [ "${{ inputs.BUILD_TARGET }}" = "vendor_boot" ]; then
+        elif [ "${{ inputs.BUILD_TARGET }}" = "vendorboot" ]; then
           echo "Compressing vendor_boot.img"
           tar -cvf vendor_boot.tar vendor_boot.img
         else
