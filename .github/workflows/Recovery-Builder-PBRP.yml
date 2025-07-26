@@ -11,7 +11,6 @@ on:
         options:
         - android-12.1
         - android-11.0
-        - android-9.0
       DEVICE_TREE:
         description: 'Custom Recovery Tree' # Your already made Device Tree for TWRP
         required: true
@@ -123,13 +122,6 @@ jobs:
             echo "No recovery makefile file found!"
         fi
       continue-on-error: true
-
-    - name: Install Python 2
-      if: inputs.MANIFEST_BRANCH != 'android-11.0' && inputs.MANIFEST_BRANCH != 'android-12.1'
-      run: |
-        sudo apt -y install python2
-        cd /usr/bin
-        sudo ln -sf python2 python
 
     - name: Fixed Missing Fonts
       run: |

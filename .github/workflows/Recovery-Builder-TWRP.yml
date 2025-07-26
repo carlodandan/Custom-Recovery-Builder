@@ -131,13 +131,6 @@ jobs:
             echo "No recovery makefile file found!"
         fi
       continue-on-error: true
-      
-    - name: Install Python 2
-      if: inputs.MANIFEST_BRANCH != 'twrp-11' && inputs.MANIFEST_BRANCH != 'twrp-12.1'
-      run: |
-        sudo apt -y install python2
-        cd /usr/bin
-        sudo ln -sf python2 python
 
     - name: Building Image 
       run: |
