@@ -145,16 +145,31 @@ jobs:
         lunch ${{ env.DEVICE_MAKEFILE }}-eng && make clean && make ${{ inputs.BUILD_TARGET }}image -j$(nproc --all)
         echo "Done building your ${{ inputs.BUILD_TARGET }}.img"
       
-    - name: Set Build Date # Output will be use in Release
+    - name: Set Other Build Properties # Output will be use in Release
       run: |
         echo "BUILD_DATE=$(date +%Y%m%d)" >> $GITHUB_ENV
+        echo "VENDOR=$(echo "${{ inputs.DEVICE_PATH }}" | cut -d'/' -f2)" >> $GITHUB_ENV
+
+    - name: Compressing TWRP Build (if Samsung)...
+      if: env.VENDOR == 'samsung'
+      run: |
+        cd android-recovery/out/target/product/${{ inputs.DEVICE_NAME }}
+        if [ "${{ inputs.BUILD_TARGET }}" = "boot" ] || [ "${{ inputs.BUILD_TARGET }}" = "recovery" ]; then
+          echo "Compressing ${{ inputs.BUILD_TARGET }}.img"
+          tar -cvf ${{ inputs.BUILD_TARGET }}.tar ${{ inputs.BUILD_TARGET }}.img
+        elif [ "${{ inputs.BUILD_TARGET }}" = "vendor_boot" ]; then
+          echo "Compressing vendor_boot.img"
+          tar -cvf vendor_boot.tar vendor_boot.img
+        else
+          echo "Unknown build target. Skipping tar..."
+        fi
       
     - name: Upload to Release (boot and becovery)
       if: inputs.BUILD_TARGET == 'boot' || inputs.BUILD_TARGET == 'recovery'
       uses: softprops/action-gh-release@v2
       with:
         files: |
-          android-recovery/out/target/product/${{ inputs.DEVICE_NAME }}/${{ inputs.BUILD_TARGET }}.img
+          android-recovery/out/target/product/${{ inputs.DEVICE_NAME }}/${{ inputs.BUILD_TARGET }}.*
         name: Unofficial TWRP for ${{ inputs.DEVICE_NAME }} // ${{ env.BUILD_DATE }}
         tag_name: ${{ github.run_id }}
         body: |
@@ -167,7 +182,7 @@ jobs:
       uses: softprops/action-gh-release@v2
       with:
         files: |
-          android-recovery/out/target/product/${{ inputs.DEVICE_NAME }}/vendor_boot.img
+          android-recovery/out/target/product/${{ inputs.DEVICE_NAME }}/vendor_boot.*
         name: Unofficial TWRP for ${{ inputs.DEVICE_NAME }} // ${{ env.BUILD_DATE }}
         tag_name: ${{ github.run_id }}
         body: |
