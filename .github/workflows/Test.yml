@@ -1,0 +1,147 @@
+name: OrangeFox 14.1 - Build
+
+# Credits: TeamWin / OrangeFox / azwhikaru Recovery Builder Template
+
+on:
+  workflow_dispatch:
+    inputs:
+      MANIFEST_BRANCH:
+        description: 'OrangeFox Manifest Branch'
+        required: true
+        default: '14.1'
+        type: choice
+        options:
+        - 14.1
+      DEVICE_TREE:
+        description: 'OrangeFox Device Tree (m14x)'
+        required: true
+        default: 'https://github.com/nepnttt/NTandroid_device_samsung_m14x.git'
+      DEVICE_TREE_BRANCH:
+        description: 'Device Tree Branch'
+        required: true
+        default: 'android-12.1'
+      DEVICE_PATH:
+        description: 'Device Path'
+        required: true
+        default: 'device/samsung/m14x'
+      DEVICE_NAME:
+        description: 'Device Codename'
+        required: true
+        default: 'm14x'
+      BUILD_TARGET:
+        description: 'Build Target'
+        required: true
+        default: 'recoveryimage'  # 14.1 default (A/B device)
+        type: choice
+        options:
+        - bootimage      # A/B devices (14.1 standard)
+        - recoveryimage  # Separate recovery partition
+        - vendorbootimage
+
+jobs:
+  build:
+    name: OFRP 14.1 by ${{ github.actor }}
+    runs-on: ubuntu-22.04
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    permissions:
+      contents: write
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      
+    - name: Clean previous builds
+      run: |
+        rm -rf out/ .repo/ OrangeFox/
+        find . -name "*.lock" -delete 2>/dev/null || true
+        echo "✅ Cleaned cache"
+              
+    - name: Clean-up
+      uses: rokibhasansagar/slimhub_actions@main
+
+    - name: 48GB Swap (14.1 needs MORE RAM)
+      uses: pierotofy/set-swap-space@master
+      with:
+        swap-size-gb: 48  # 14.1 = 85GB+ disk needed
+        
+    - name: Build Environment (14.1 deps)
+      run: |
+        sudo apt-get update
+        sudo apt install aria2 git repo python3 bc bison flex libssl-dev -y
+        git clone https://gitlab.com/OrangeFox/misc/scripts.git -b master
+        cd scripts && sudo bash setup/android_build_env.sh
+      
+    - name: Set-up FOX 14.1 Manifest
+      run: |
+        mkdir -p ${GITHUB_WORKSPACE}/OrangeFox
+        cd ${GITHUB_WORKSPACE}/OrangeFox
+        git config --global user.name "${{ github.actor }}"
+        git config --global user.email "${{ github.actor_id }}+${{ github.actor }}@users.noreply.github.com"
+        git clone https://gitlab.com/OrangeFox/sync.git -b master
+        cd sync
+        ./orangefox_sync.sh --branch ${{ inputs.MANIFEST_BRANCH }} --path ${GITHUB_WORKSPACE}/OrangeFox/fox_${{ inputs.MANIFEST_BRANCH }}
+
+    - name: Clone Device Tree
+      run: |
+        cd ${GITHUB_WORKSPACE}/OrangeFox/fox_${{ inputs.MANIFEST_BRANCH }}
+        git clone ${{ inputs.DEVICE_TREE }} -b ${{ inputs.DEVICE_TREE_BRANCH }} ./${{ inputs.DEVICE_PATH }}
+        cd ${{ inputs.DEVICE_PATH }}
+        echo "COMMIT_ID=$(git rev-parse HEAD)" >> $GITHUB_ENV
+
+    - name: Build OrangeFox 14.1
+      run: |
+        cd ${GITHUB_WORKSPACE}/OrangeFox/fox_${{ inputs.MANIFEST_BRANCH }}
+        export ALLOW_MISSING_DEPENDENCIES=true
+        export LC_ALL=C.UTF-8
+        export FOX_BUILD_DEVICE=${{ inputs.DEVICE_NAME }}
+        
+        # 14.1 FLAGS (A/B + AVB)
+        export OF_PATCH_AVB20=1
+        export FOX_AB_DEVICE=1  # A/B device
+        export USE_CCACHE=1
+        export CCACHE_EXEC=/usr/bin/ccache
+        ccache -M 50G
+        
+        source build/envsetup.sh
+        
+        # 14.1 LUNCH (ap2a for A/B)
+        if [[ "${{ inputs.BUILD_TARGET }}" == "bootimage" ]]; then
+          lunch twrp_${{ inputs.DEVICE_NAME }}-ap2a-eng
+        else
+          lunch twrp_${{ inputs.DEVICE_NAME }}-eng
+        fi
+        
+        make clean
+        mka -j1 adbd
+        mka -j$(nproc) ${{ inputs.BUILD_TARGET }}
+        
+    - name: Set Release Properties
+      run: |
+        echo "BUILD_DATE=$(TZ=Asia/Manila date +%Y%m%d)" >> $GITHUB_ENV
+        cd ${GITHUB_WORKSPACE}/OrangeFox/fox_${{ inputs.MANIFEST_BRANCH }}
+        DEVICE_TREE_URL="${{ inputs.DEVICE_TREE }}"
+        if [[ "${DEVICE_TREE_URL}" == *.git ]]; then
+          DEVICE_TREE_URL="${DEVICE_TREE_URL%.git}"
+        fi
+        echo "DEVICE_TREE_URL=${DEVICE_TREE_URL}" >> $GITHUB_ENV
+
+    - name: Upload OrangeFox 14.1
+      if: always()
+      uses: softprops/action-gh-release@v2
+      with:
+        files: |
+          OrangeFox/fox_${{ inputs.MANIFEST_BRANCH }}/out/target/product/${{ inputs.DEVICE_NAME }}/OrangeFox*.img
+          OrangeFox/fox_${{ inputs.MANIFEST_BRANCH }}/out/target/product/${{ inputs.DEVICE_NAME }}/*.img
+          OrangeFox/fox_${{ inputs.MANIFEST_BRANCH }}/out/target/product/${{ inputs.DEVICE_NAME }}/*.zip
+          OrangeFox/fox_${{ inputs.MANIFEST_BRANCH }}/out/target/product/${{ inputs.DEVICE_NAME }}/*.tar
+        name: "OFRP 14.1 - ${{ inputs.DEVICE_NAME }} - ${{ env.BUILD_DATE }}"
+        tag_name: ${{ github.run_id }}
+        body: |
+          # OrangeFox Recovery 14.1 - Unofficial
+          **Device**: Samsung Galaxy M14/F14 5G (m14x)
+          **Branch**: fox_14.1 (Android 14)
+          **Tree**: [${{ env.DEVICE_TREE_URL }}/tree/${{ inputs.DEVICE_TREE_BRANCH }}]
+          **Commit**: [${{ env.COMMIT_ID }}]
+          **Target**: ${{ inputs.BUILD_TARGET }}
+          
+          **Features**: AVB2.0 + A/B + ro2rw + Full Data Backup + Vendor.prop
