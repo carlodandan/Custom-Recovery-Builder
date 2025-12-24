@@ -9,11 +9,11 @@ on:
       DEVICE_TREE:
         description: 'Device tree URL'
         required: true
-        default: 'https://github.com/TeamWin/android_device_samsung_m14x.git'
+        default: 'https://github.com/neepntttt/Ofox'
       BRANCH:
         description: 'Device tree branch'
         required: true
-        default: 'android-14.0'
+        default: 'android-12.1'
       SHRP_BRANCH:
         description: 'SHRP branch (14)'
         required: true
@@ -21,7 +21,7 @@ on:
       MAINTAINER:
         description: 'Your name'
         required: true
-        default: 'YourName'
+        default: 'neepntttt'
 
 jobs:
   build:
