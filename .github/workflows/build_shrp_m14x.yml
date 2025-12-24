@@ -1,0 +1,117 @@
+name: SHRP 14 m14x Builder
+on:
+  workflow_dispatch:
+    inputs:
+      DEVICE_NAME:
+        default: 'm14x'
+      BRANCH:
+        default: '14'
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Clean & Setup
+      run: |
+        rm -rf SHRP out .repo
+        sudo apt update && sudo apt install -y aria2 git repo python3 bc bison flex libssl-dev clang lld ninja-build ccache
+    
+    - name: 32GB Swap
+      uses: pierotofy/set-swap-space@master
+      with:
+        swap-size-gb: 32
+    
+    - name: SHRP 14 + m14x Device Tree
+      run: |
+        mkdir SHRP && cd SHRP
+        repo init -u https://github.com/SHRP/platform_manifest -b ${{ inputs.BRANCH }} --git-lfs
+        repo sync -c --force-sync --no-clone-bundle --no-tags -j$(nproc)
+        
+        mkdir -p device/samsung/m14x
+        
+        # shrp.flags
+        cat > device/samsung/m14x/shrp.flags << 'EOF'
+SHRP_DEVICE := m14x
+SHRP_PATH := device/samsung/m14x
+SHRP_MAINTAINER := YourName
+SHRP_DEVICE_CODE := m14x
+SHRP_AVB := true
+SHRP_RO2RW := true
+SHRP_SYSTEM_WIPE_POST_RO2RW := true
+SHRP_BACKUP_DATA := true
+SHRP_KERNEL_EXTRACTOR := true
+SHRP_DEVICE_HAS_SUPER_PARTITION := true
+SHRP_INCLUDE_CRYPTO := true
+EOF
+        
+        # AndroidProducts.mk
+        cat > device/samsung/m14x/AndroidProducts.mk << 'EOF'
+PRODUCT_MAKEFILES := \
+    $(LOCAL_DIR)/shrp_m14x.mk
+EOF
+        
+        # shrp_m14x.mk
+        cat > device/samsung/m14x/shrp_m14x.mk << 'EOF'
+$(call inherit-product, $(SRC_TARGET_DIR)/product/full_base.mk)
+PRODUCT_DEVICE := m14x
+PRODUCT_NAME := shrp_m14x
+PRODUCT_BRAND := samsung
+PRODUCT_MODEL := SM-E146B
+PRODUCT_PACKAGES += recovery
+PRODUCT_COPY_FILES += \
+    $(LOCAL_PATH)/recovery.fstab:recovery/root/recovery.fstab
+EOF
+        
+        # BoardConfig.mk
+        cat > device/samsung/m14x/BoardConfig.mk << 'EOF'
+TARGET_ARCH := arm64
+TARGET_BOARD_PLATFORM := exynos1330
+TARGET_BOOTLOADER_BOARD_NAME := m14x
+TARGET_RECOVERY_FSTAB := device/samsung/m14x/recovery.fstab
+BOARD_RECOVERYIMAGE_PARTITION_SIZE := 80000000
+TARGET_SCREEN_WIDTH := 1080
+TARGET_SCREEN_HEIGHT := 2340
+TARGET_RECOVERY_PIXEL_FORMAT := "RGBX_8888"
+TW_THEME := portrait_hdpi
+TW_DEVICE_HAS_SUPER_PARTITION := true
+TW_INCLUDE_CRYPTO := true
+DISABLE_RUST_MODULES := true
+EOF
+        
+        # recovery.fstab
+        cat > device/samsung/m14x/recovery.fstab << 'EOF'
+/boot           emmc    /dev/block/by-name/boot           flags=display
+/system         ext4    /dev/block/by-name/system         flags=display,wipe,ro2rw
+/data           f2fs    /dev/block/by-name/userdata       flags=backup,wipe,data
+/super          raw     /dev/block/by-name/super          flags=display
+/vbmeta         raw     /dev/block/by-name/vbmeta         flags=avb
+EOF
+        
+        # device.mk + vendorsetup
+        cat > device/samsung/m14x/device.mk << 'EOF'
+$(call inherit-product, device/samsung/m14x/shrp_m14x.mk)
+-include $(LOCAL_PATH)/shrp.flags
+EOF
+        
+        cat > device/samsung/m14x/vendorsetup.sh << 'EOF'
+add_lunch_combo shrp_m14x-eng
+EOF
+    
+    - name: Build SHRP
+      run: |
+        cd SHRP
+        export ALLOW_MISSING_DEPENDENCIES=true
+        export DISABLE_RUST_MODULES=1
+        source build/envsetup.sh
+        lunch shrp_${{ inputs.DEVICE_NAME }}-eng
+        make clean && mka -j$(nproc) recoveryimage
+    
+    - name: Release
+      uses: softprops/action-gh-release@v2
+      with:
+        files: |
+          SHRP/out/target/product/${{ inputs.DEVICE_NAME }}/*.img
+          SHRP/out/target/product/${{ inputs.DEVICE_NAME }}/*.zip
+        name: "SHRP-14-${{ inputs.DEVICE_NAME }}"
