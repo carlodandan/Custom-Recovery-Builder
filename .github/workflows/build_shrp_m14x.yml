@@ -1,0 +1,76 @@
+name: SHRP 14 Recovery Builder
+on:
+  workflow_dispatch:
+    inputs:
+      DEVICE_NAME:
+        description: 'Device codename (m14x)'
+        required: true
+        default: 'm14x'
+      DEVICE_TREE:
+        description: 'Device tree URL'
+        required: true
+        default: 'https://github.com/neepntttt/Ofox'
+      BRANCH:
+        description: 'Device tree branch'
+        required: true
+        default: 'android-12.1'
+      SHRP_BRANCH:
+        description: 'SHRP branch (14)'
+        required: true
+        default: '14'
+      MAINTAINER:
+        description: 'Your name'
+        required: true
+        default: 'neepntttt'
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup
+      run: |
+        sudo apt update && sudo apt install -y aria2 git repo python3 bc bison flex libssl-dev clang lld ninja-build ccache
+    
+    - name: 32GB Swap
+      uses: pierotofy/set-swap-space@master
+      with:
+        swap-size-gb: 32
+    
+    - name: SHRP + Device Tree
+      run: |
+        mkdir SHRP && cd SHRP
+        repo init -u https://github.com/SHRP/platform_manifest -b ${{ inputs.SHRP_BRANCH }} --git-lfs
+        repo sync -c --force-sync -j$(nproc)
+        
+        # Clone YOUR device tree
+        mkdir -p device/samsung/${{ inputs.DEVICE_NAME }}
+        cd device/samsung/${{ inputs.DEVICE_NAME }}
+        git clone ${{ inputs.DEVICE_TREE }} -b ${{ inputs.BRANCH }} .
+        
+        # Auto-generate missing flags
+        cat > shrp.flags << 'EOF'
+SHRP_DEVICE := ${{ inputs.DEVICE_NAME }}
+SHRP_PATH := device/samsung/${{ inputs.DEVICE_NAME }}
+SHRP_MAINTAINER := ${{ inputs.MAINTAINER }}
+SHRP_AVB := true
+SHRP_RO2RW := true
+SHRP_BACKUP_DATA := true
+SHRP_DEVICE_HAS_SUPER_PARTITION := true
+EOF
+    
+    - name: Build
+      run: |
+        cd SHRP
+        export ALLOW_MISSING_DEPENDENCIES=true DISABLE_RUST_MODULES=1
+        source build/envsetup.sh
+        lunch shrp_${{ inputs.DEVICE_NAME }}-eng
+        make clean && mka -j$(nproc) recoveryimage
+    
+    - name: Release
+      uses: softprops/action-gh-release@v2
+      with:
+        files: |
+          SHRP/out/target/product/${{ inputs.DEVICE_NAME }}/*.img
+        name: "SHRP-${{ inputs.SHRP_BRANCH }}-${{ inputs.DEVICE_NAME }} by ${{ inputs.MAINTAINER }}"
